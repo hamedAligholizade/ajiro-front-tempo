@@ -276,22 +276,23 @@ const LoyaltyProgram = () => {
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-[1200px] mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold">Loyalty Program</h1>
+          <h1 className="text-3xl font-bold">{t("loyaltyProgram.title")}</h1>
           <p className="text-muted-foreground">
-            Manage customer loyalty and rewards
+            {t("loyaltyProgram.subtitle")}
           </p>
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start mb-6 overflow-x-auto">
             <TabsTrigger value="customers" className="flex items-center">
-              <Users className="mr-2 h-4 w-4" /> Customers
+              <Users className="mr-2 h-4 w-4" /> {t("loyaltyProgram.customers")}
             </TabsTrigger>
             <TabsTrigger value="campaigns" className="flex items-center">
-              <MessageSquare className="mr-2 h-4 w-4" /> Campaigns
+              <MessageSquare className="mr-2 h-4 w-4" />{" "}
+              {t("loyaltyProgram.campaigns")}
             </TabsTrigger>
             <TabsTrigger value="rewards" className="flex items-center">
-              <Gift className="mr-2 h-4 w-4" /> Rewards
+              <Gift className="mr-2 h-4 w-4" /> {t("loyaltyProgram.rewards")}
             </TabsTrigger>
           </TabsList>
 
@@ -303,14 +304,15 @@ const LoyaltyProgram = () => {
                 <div className="relative flex-1 sm:flex-none sm:w-64">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search customers..."
+                    placeholder={t("loyaltyProgram.searchCustomers")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-8"
                   />
                 </div>
                 <Button onClick={() => setShowAddCustomerDialog(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Add Customer
+                  <Plus className="mr-2 h-4 w-4" />{" "}
+                  {t("loyaltyProgram.addCustomer")}
                 </Button>
               </div>
             </div>

@@ -57,6 +57,11 @@ const Sidebar = () => {
       path: "/loyalty-program",
     },
     {
+      name: t("common.acquisition"),
+      icon: <Users className="h-5 w-5" />,
+      path: "/acquisition",
+    },
+    {
       name: t("common.settings"),
       icon: <Settings className="h-5 w-5" />,
       path: "/settings",

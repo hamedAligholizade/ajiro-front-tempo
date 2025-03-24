@@ -93,10 +93,8 @@ const SalesCounter = () => {
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-[1200px] mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold">Sales Counter</h1>
-          <p className="text-muted-foreground">
-            Process transactions and checkout
-          </p>
+          <h1 className="text-3xl font-bold">{t("salesCounter.title")}</h1>
+          <p className="text-muted-foreground">{t("salesCounter.subtitle")}</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -105,11 +103,11 @@ const SalesCounter = () => {
             <Card className="bg-white">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
-                  <CardTitle>Product Catalog</CardTitle>
+                  <CardTitle>{t("salesCounter.productCatalog")}</CardTitle>
                   <div className="relative w-64">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search products..."
+                      placeholder={t("salesCounter.searchProducts")}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-8"
@@ -165,14 +163,15 @@ const SalesCounter = () => {
             <Card className="bg-white">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
-                  <CardTitle>Shopping Cart</CardTitle>
+                  <CardTitle>{t("salesCounter.shoppingCart")}</CardTitle>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={clearCart}
                     disabled={cart.length === 0}
                   >
-                    <Trash2 className="h-4 w-4 mr-1" /> Clear
+                    <Trash2 className="h-4 w-4 mr-1" />{" "}
+                    {t("salesCounter.clear")}
                   </Button>
                 </div>
               </CardHeader>
@@ -180,7 +179,7 @@ const SalesCounter = () => {
                 <div className="space-y-4">
                   {cart.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      Cart is empty
+                      {t("salesCounter.cartEmpty")}
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -236,7 +235,7 @@ const SalesCounter = () => {
 
                   <div className="pt-4 border-t">
                     <div className="flex justify-between text-lg font-bold">
-                      <span>Total:</span>
+                      <span>{t("salesCounter.total")}</span>
                       <span>${calculateTotal().toFixed(2)}</span>
                     </div>
                   </div>
@@ -248,7 +247,8 @@ const SalesCounter = () => {
                       onClick={handleCheckout}
                       disabled={cart.length === 0}
                     >
-                      <CreditCard className="mr-2 h-5 w-5" /> Checkout
+                      <CreditCard className="mr-2 h-5 w-5" />{" "}
+                      {t("salesCounter.checkout")}
                     </Button>
                     <Button
                       variant="outline"
@@ -256,7 +256,8 @@ const SalesCounter = () => {
                       onClick={handlePrintReceipt}
                       disabled={cart.length === 0}
                     >
-                      <Printer className="mr-2 h-5 w-5" /> Print Receipt
+                      <Printer className="mr-2 h-5 w-5" />{" "}
+                      {t("salesCounter.printReceipt")}
                     </Button>
                   </div>
                 </div>

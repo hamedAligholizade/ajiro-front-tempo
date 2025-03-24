@@ -10,6 +10,7 @@ export type Translation = {
     settings: string;
     customers: string;
     campaigns: string;
+    acquisition: string;
   };
   dashboard: {
     title: string;
@@ -92,6 +93,61 @@ export type Translation = {
     scheduled: string;
     completed: string;
   };
+  settings: {
+    profile: string;
+    store: string;
+    products: string;
+    notifications: string;
+    security: string;
+    billing: string;
+    profileSettings: string;
+    profileSettingsDescription: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    admin: string;
+    manager: string;
+    staff: string;
+    saveChanges: string;
+    storeSettings: string;
+    storeSettingsDescription: string;
+    storeName: string;
+    storeAddress: string;
+    businessType: string;
+    retail: string;
+    restaurant: string;
+    service: string;
+    currency: string;
+    productSettings: string;
+    productSettingsDescription: string;
+    notificationSettings: string;
+    notificationSettingsDescription: string;
+    securitySettings: string;
+    securitySettingsDescription: string;
+    billingSettings: string;
+    billingSettingsDescription: string;
+    comingSoon: string;
+  };
+  acquisition: {
+    title: string;
+    subtitle: string;
+    luckyWheel: string;
+    luckyWheelDescription: string;
+    spinWheel: string;
+    prizes: string;
+    congratulations: string;
+    tryAgain: string;
+    enterPhone: string;
+    phoneRequired: string;
+    submit: string;
+    termsAndConditions: string;
+    shareWithFriends: string;
+    inviteFriends: string;
+    referralCode: string;
+    copyCode: string;
+    shareOnSocialMedia: string;
+  };
 };
 
 const en: Translation = {
@@ -104,6 +160,7 @@ const en: Translation = {
     settings: "Settings",
     customers: "Customers",
     campaigns: "Campaigns",
+    acquisition: "Customer Acquisition",
   },
   dashboard: {
     title: "Ajiro Dashboard",
@@ -186,6 +243,63 @@ const en: Translation = {
     scheduled: "Scheduled",
     completed: "Completed",
   },
+  settings: {
+    profile: "Profile",
+    store: "Store",
+    products: "Products",
+    notifications: "Notifications",
+    security: "Security",
+    billing: "Billing",
+    profileSettings: "Profile Settings",
+    profileSettingsDescription:
+      "Manage your personal information and account settings",
+    name: "Name",
+    email: "Email",
+    phone: "Phone",
+    role: "Role",
+    admin: "Administrator",
+    manager: "Manager",
+    staff: "Staff",
+    saveChanges: "Save Changes",
+    storeSettings: "Store Settings",
+    storeSettingsDescription: "Manage your store information and preferences",
+    storeName: "Store Name",
+    storeAddress: "Store Address",
+    businessType: "Business Type",
+    retail: "Retail",
+    restaurant: "Restaurant",
+    service: "Service",
+    currency: "Currency",
+    productSettings: "Product Settings",
+    productSettingsDescription: "Manage your product catalog and inventory",
+    notificationSettings: "Notification Settings",
+    notificationSettingsDescription: "Manage your notification preferences",
+    securitySettings: "Security Settings",
+    securitySettingsDescription: "Manage your security and privacy settings",
+    billingSettings: "Billing Settings",
+    billingSettingsDescription:
+      "Manage your billing information and subscription",
+    comingSoon: "Coming Soon",
+  },
+  acquisition: {
+    title: "Customer Acquisition",
+    subtitle: "Tools to attract new customers to your business",
+    luckyWheel: "Lucky Wheel",
+    luckyWheelDescription: "Spin the wheel for a chance to win exciting prizes",
+    spinWheel: "Spin the Wheel",
+    prizes: "Prizes",
+    congratulations: "Congratulations!",
+    tryAgain: "Try Again",
+    enterPhone: "Enter your phone number to claim your prize",
+    phoneRequired: "Phone number is required",
+    submit: "Submit",
+    termsAndConditions: "Terms and Conditions",
+    shareWithFriends: "Share with Friends",
+    inviteFriends: "Invite Friends",
+    referralCode: "Referral Code",
+    copyCode: "Copy Code",
+    shareOnSocialMedia: "Share on Social Media",
+  },
 };
 
 const fa: Translation = {
@@ -198,6 +312,7 @@ const fa: Translation = {
     settings: "تنظیمات",
     customers: "مشتریان",
     campaigns: "کمپین‌ها",
+    acquisition: "جذب مشتری",
   },
   dashboard: {
     title: "داشبورد آجیرو",
@@ -279,6 +394,62 @@ const fa: Translation = {
     draft: "پیش‌نویس",
     scheduled: "زمان‌بندی شده",
     completed: "تکمیل شده",
+  },
+  settings: {
+    profile: "پروفایل",
+    store: "فروشگاه",
+    products: "محصولات",
+    notifications: "اعلان‌ها",
+    security: "امنیت",
+    billing: "صورتحساب",
+    profileSettings: "تنظیمات پروفایل",
+    profileSettingsDescription: "مدیریت اطلاعات شخصی و تنظیمات حساب کاربری",
+    name: "نام",
+    email: "ایمیل",
+    phone: "تلفن",
+    role: "نقش",
+    admin: "مدیر",
+    manager: "مدیر اجرایی",
+    staff: "کارمند",
+    saveChanges: "ذخیره تغییرات",
+    storeSettings: "تنظیمات فروشگاه",
+    storeSettingsDescription: "مدیریت اطلاعات و تنظیمات فروشگاه",
+    storeName: "نام فروشگاه",
+    storeAddress: "آدرس فروشگاه",
+    businessType: "نوع کسب و کار",
+    retail: "خرده‌فروشی",
+    restaurant: "رستوران",
+    service: "خدمات",
+    currency: "واحد پول",
+    productSettings: "تنظیمات محصولات",
+    productSettingsDescription: "مدیریت کاتالوگ محصولات و موجودی",
+    notificationSettings: "تنظیمات اعلان‌ها",
+    notificationSettingsDescription: "مدیریت تنظیمات اعلان‌ها",
+    securitySettings: "تنظیمات امنیتی",
+    securitySettingsDescription: "مدیریت تنظیمات امنیتی و حریم خصوصی",
+    billingSettings: "تنظیمات صورتحساب",
+    billingSettingsDescription: "مدیریت اطلاعات صورتحساب و اشتراک",
+    comingSoon: "به زودی",
+  },
+  acquisition: {
+    title: "جذب مشتری",
+    subtitle: "ابزارهایی برای جذب مشتریان جدید به کسب و کار شما",
+    luckyWheel: "چرخ شانس",
+    luckyWheelDescription:
+      "چرخ را بچرخانید و شانس خود را برای بردن جوایز هیجان‌انگیز امتحان کنید",
+    spinWheel: "چرخاندن چرخ",
+    prizes: "جوایز",
+    congratulations: "تبریک!",
+    tryAgain: "دوباره امتحان کنید",
+    enterPhone: "برای دریافت جایزه خود، شماره تلفن خود را وارد کنید",
+    phoneRequired: "شماره تلفن الزامی است",
+    submit: "ارسال",
+    termsAndConditions: "شرایط و ضوابط",
+    shareWithFriends: "اشتراک‌گذاری با دوستان",
+    inviteFriends: "دعوت از دوستان",
+    referralCode: "کد معرف",
+    copyCode: "کپی کد",
+    shareOnSocialMedia: "اشتراک‌گذاری در شبکه‌های اجتماعی",
   },
 };
 

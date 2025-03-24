@@ -8,6 +8,7 @@ import LoyaltyProgram from "./pages/loyalty-program";
 import Customers from "./pages/customers";
 import Campaigns from "./pages/campaigns";
 import Settings from "./pages/settings";
+import CustomerAcquisition from "./pages/acquisition";
 import Layout from "./components/layout/Layout";
 import routes from "tempo-routes";
 import { setLocale } from "./lib/i18n";
@@ -87,6 +88,14 @@ function App() {
             element={
               <Layout>
                 <Settings />
+              </Layout>
+            }
+          />
+          <Route
+            path="/acquisition"
+            element={
+              <Layout>
+                <CustomerAcquisition />
               </Layout>
             }
           />

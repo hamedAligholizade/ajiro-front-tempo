@@ -174,22 +174,25 @@ const CustomerFeedback = () => {
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-[1200px] mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold">Customer Feedback</h1>
+          <h1 className="text-3xl font-bold">{t("customerFeedback.title")}</h1>
           <p className="text-muted-foreground">
-            Collect and analyze customer feedback
+            {t("customerFeedback.subtitle")}
           </p>
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start mb-6 overflow-x-auto">
             <TabsTrigger value="surveys" className="flex items-center">
-              <MessageSquare className="mr-2 h-4 w-4" /> Surveys
+              <MessageSquare className="mr-2 h-4 w-4" />{" "}
+              {t("customerFeedback.surveys")}
             </TabsTrigger>
             <TabsTrigger value="responses" className="flex items-center">
-              <Star className="mr-2 h-4 w-4" /> Responses
+              <Star className="mr-2 h-4 w-4" />{" "}
+              {t("customerFeedback.responses")}
             </TabsTrigger>
             <TabsTrigger value="qr-codes" className="flex items-center">
-              <QrCode className="mr-2 h-4 w-4" /> QR Codes
+              <QrCode className="mr-2 h-4 w-4" />{" "}
+              {t("customerFeedback.qrCodes")}
             </TabsTrigger>
           </TabsList>
 
@@ -198,7 +201,8 @@ const CustomerFeedback = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Feedback Surveys</h2>
               <Button onClick={handleCreateSurvey}>
-                <Plus className="mr-2 h-4 w-4" /> Create Survey
+                <Plus className="mr-2 h-4 w-4" />{" "}
+                {t("customerFeedback.createSurvey")}
               </Button>
             </div>
 
