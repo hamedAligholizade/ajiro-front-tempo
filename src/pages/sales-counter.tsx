@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, CreditCard, Printer, Tag, Search } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 interface Product {
   id: string;

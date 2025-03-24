@@ -42,6 +42,7 @@ import {
   Eye,
   ArrowLeft,
 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 interface Customer {
   id: string;

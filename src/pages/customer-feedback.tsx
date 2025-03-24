@@ -27,6 +27,7 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 interface Survey {
   id: string;
