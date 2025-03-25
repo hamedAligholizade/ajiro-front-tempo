@@ -50,6 +50,7 @@ interface Product {
   location: string;
   lastRestocked: string;
   description?: string;
+  imageUrl?: string;
   status: "in-stock" | "low-stock" | "out-of-stock";
 }
 
@@ -78,6 +79,8 @@ const InventoryManagement = () => {
       location: "قفسه A1",
       lastRestocked: "2023-09-01",
       description: "قهوه اسپرسو با کیفیت عالی",
+      imageUrl:
+        "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=300&q=80",
       status: "in-stock",
     },
     {
@@ -92,6 +95,8 @@ const InventoryManagement = () => {
       supplier: "چای مازندران",
       location: "قفسه A2",
       lastRestocked: "2023-09-05",
+      imageUrl:
+        "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=300&q=80",
       status: "in-stock",
     },
     {
@@ -106,6 +111,8 @@ const InventoryManagement = () => {
       supplier: "آشپزخانه مرکزی",
       location: "یخچال B1",
       lastRestocked: "2023-09-10",
+      imageUrl:
+        "https://images.unsplash.com/photo-1553909489-cd47e0907980?w=300&q=80",
       status: "low-stock",
     },
     {
@@ -441,9 +448,29 @@ const InventoryManagement = () => {
                         {filteredProducts.map((product) => (
                           <tr key={product.id} className="border-b">
                             <td className="px-4 py-3">
-                              <div className="font-medium">{product.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {product.sku}
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
+                                  <img
+                                    src={
+                                      product.imageUrl ||
+                                      "https://via.placeholder.com/150?text=بدون+تصویر"
+                                    }
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src =
+                                        "https://via.placeholder.com/150?text=بدون+تصویر";
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <div className="font-medium">
+                                    {product.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {product.sku}
+                                  </div>
+                                </div>
                               </div>
                             </td>
                             <td className="px-4 py-3">{product.category}</td>

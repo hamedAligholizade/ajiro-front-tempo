@@ -41,6 +41,7 @@ const AddProductModal = ({
     supplier: "",
     location: "",
     description: "",
+    imageUrl: "",
   });
 
   const handleChange = (
@@ -89,6 +90,7 @@ const AddProductModal = ({
       supplier: "",
       location: "",
       description: "",
+      imageUrl: "",
     });
   };
 
@@ -224,6 +226,29 @@ const AddProductModal = ({
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="imageUrl">آدرس تصویر</Label>
+              <Input
+                id="imageUrl"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/image.jpg"
+              />
+              {formData.imageUrl && (
+                <div className="mt-2 rounded-md overflow-hidden w-24 h-24">
+                  <img
+                    src={formData.imageUrl}
+                    alt="پیش‌نمایش محصول"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://via.placeholder.com/150?text=تصویر+ناموجود";
+                    }}
+                  />
+                </div>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="description">توضیحات</Label>
               <Textarea

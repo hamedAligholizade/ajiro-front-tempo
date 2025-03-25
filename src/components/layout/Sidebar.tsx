@@ -19,10 +19,33 @@ const Sidebar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Close sidebar when route changes on mobile
+  // Close sidebar when route changes on mobile or when clicking outside
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
+
+  // Close sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobileMenuOpen) {
+        const sidebar = document.querySelector(".sidebar-container");
+        const toggleButton = document.getElementById("mobile-menu-toggle");
+        if (
+          sidebar &&
+          !sidebar.contains(event.target as Node) &&
+          toggleButton &&
+          !toggleButton.contains(event.target as Node)
+        ) {
+          setIsMobileMenuOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   // Add toggle button to header for mobile
   useEffect(() => {
@@ -112,7 +135,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-20 transform transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
+      className={`sidebar-container h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-30 transform transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
     >
       {/* Overlay for mobile */}
       {isMobileMenuOpen && (

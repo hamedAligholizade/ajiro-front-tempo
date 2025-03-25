@@ -48,6 +48,7 @@ interface Product {
   price: number;
   category: string;
   stock?: number;
+  imageUrl?: string;
 }
 
 interface CartItem extends Product {
@@ -89,26 +90,78 @@ const SalesCounter = () => {
 
   // Sample product data
   const products: Product[] = [
-    { id: "1", name: "Coffee", price: 3.5, category: "Beverages", stock: 50 },
-    { id: "2", name: "Tea", price: 2.5, category: "Beverages", stock: 45 },
-    { id: "3", name: "Sandwich", price: 5.99, category: "Food", stock: 15 },
-    { id: "4", name: "Salad", price: 6.99, category: "Food", stock: 10 },
+    {
+      id: "1",
+      name: "Coffee",
+      price: 3.5,
+      category: "Beverages",
+      stock: 50,
+      imageUrl:
+        "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=300&q=80",
+    },
+    {
+      id: "2",
+      name: "Tea",
+      price: 2.5,
+      category: "Beverages",
+      stock: 45,
+      imageUrl:
+        "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=300&q=80",
+    },
+    {
+      id: "3",
+      name: "Sandwich",
+      price: 5.99,
+      category: "Food",
+      stock: 15,
+      imageUrl:
+        "https://images.unsplash.com/photo-1553909489-cd47e0907980?w=300&q=80",
+    },
+    {
+      id: "4",
+      name: "Salad",
+      price: 6.99,
+      category: "Food",
+      stock: 10,
+      imageUrl:
+        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80",
+    },
     {
       id: "5",
       name: "Notebook",
       price: 4.99,
       category: "Stationery",
       stock: 30,
+      imageUrl:
+        "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=300&q=80",
     },
-    { id: "6", name: "Pen", price: 1.99, category: "Stationery", stock: 100 },
+    {
+      id: "6",
+      name: "Pen",
+      price: 1.99,
+      category: "Stationery",
+      stock: 100,
+      imageUrl:
+        "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=300&q=80",
+    },
     {
       id: "7",
       name: "Water Bottle",
       price: 2.99,
       category: "Beverages",
       stock: 40,
+      imageUrl:
+        "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=300&q=80",
     },
-    { id: "8", name: "Muffin", price: 3.99, category: "Food", stock: 25 },
+    {
+      id: "8",
+      name: "Muffin",
+      price: 3.99,
+      category: "Food",
+      stock: 25,
+      imageUrl:
+        "https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=300&q=80",
+    },
   ];
 
   // Sample discount data
@@ -338,17 +391,145 @@ const SalesCounter = () => {
 
   const handlePrintReceipt = () => {
     if (receiptData) {
-      console.log("Printing receipt...", receiptData);
-      alert("Printing receipt...");
+      // Create a printable version of the receipt
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Receipt</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                .receipt { max-width: 300px; margin: 0 auto; }
+                .header { text-align: center; margin-bottom: 20px; }
+                .info { display: flex; justify-content: space-between; margin-bottom: 15px; }
+                .items { border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 10px 0; margin-bottom: 15px; }
+                .item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                .totals { margin-bottom: 15px; }
+                .total-row { display: flex; justify-content: space-between; }
+                .grand-total { font-weight: bold; font-size: 1.2em; margin-top: 5px; }
+                .footer { text-align: center; font-size: 0.8em; margin-top: 30px; }
+                @media print { body { padding: 0; } }
+              </style>
+            </head>
+            <body>
+              <div class="receipt">
+                <div class="header">
+                  <h2>Store Receipt</h2>
+                  <p>Thank you for your purchase!</p>
+                </div>
+                
+                <div class="info">
+                  <div>
+                    <p><strong>Receipt #:</strong> ${receiptData.receiptNumber}</p>
+                    <p><strong>Date:</strong> ${receiptData.date}</p>
+                  </div>
+                  <div>
+                    <p><strong>Payment:</strong> ${receiptData.paymentMethod}</p>
+                    ${receiptData.customer ? `<p><strong>Customer:</strong> ${receiptData.customer.name}</p>` : ""}
+                  </div>
+                </div>
+                
+                <div class="items">
+                  <h3>Items</h3>
+                  ${receiptData.items
+                    .map(
+                      (item: CartItem) => `
+                    <div class="item">
+                      <span>${item.name} × ${item.quantity} ${item.discountPercent ? `(${item.discountPercent}% off)` : ""}</span>
+                      <span>${(item.price * item.quantity - (item.discountPercent ? (item.price * item.quantity * item.discountPercent) / 100 : 0)).toFixed(2)}</span>
+                    </div>
+                  `,
+                    )
+                    .join("")}
+                </div>
+                
+                <div class="totals">
+                  <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>${receiptData.subtotal.toFixed(2)}</span>
+                  </div>
+                  
+                  ${
+                    receiptData.discount > 0
+                      ? `
+                    <div class="total-row">
+                      <span>Discount:</span>
+                      <span>-${receiptData.discount.toFixed(2)}</span>
+                    </div>
+                  `
+                      : ""
+                  }
+                  
+                  ${
+                    receiptData.loyaltyDiscount > 0
+                      ? `
+                    <div class="total-row">
+                      <span>Loyalty Discount:</span>
+                      <span>-${receiptData.loyaltyDiscount.toFixed(2)}</span>
+                    </div>
+                  `
+                      : ""
+                  }
+                  
+                  <div class="total-row">
+                    <span>Tax:</span>
+                    <span>${receiptData.tax.toFixed(2)}</span>
+                  </div>
+                  
+                  <div class="total-row grand-total">
+                    <span>Total:</span>
+                    <span>${receiptData.total.toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                ${
+                  receiptData.customer
+                    ? `
+                  <div style="background-color: #f0f8ff; padding: 10px; border-radius: 5px;">
+                    <p style="font-weight: bold; margin: 0 0 5px 0;">Loyalty Program</p>
+                    <p style="margin: 0 0 5px 0;">Points earned: ${Math.floor(receiptData.total)}</p>
+                    <p style="margin: 0;">New balance: ${receiptData.customer.loyaltyPoints + Math.floor(receiptData.total)} points</p>
+                  </div>
+                `
+                    : ""
+                }
+                
+                <div class="footer">
+                  <p>Thank you for shopping with us!</p>
+                  <p>Please keep this receipt for your records.</p>
+                </div>
+              </div>
+              <script>
+                window.onload = function() { window.print(); }
+              </script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
     } else {
       // Generate a receipt first if none exists
       generateReceipt();
     }
   };
 
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+
+  const filteredCustomers = customerSearchTerm
+    ? customers.filter(
+        (customer) =>
+          customer.name
+            .toLowerCase()
+            .includes(customerSearchTerm.toLowerCase()) ||
+          customer.phone.includes(customerSearchTerm),
+      )
+    : customers;
+
   const selectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
     setShowLoyaltyDialog(false);
+    setCustomerSearchTerm("");
   };
 
   const registerNewCustomer = () => {
@@ -409,8 +590,22 @@ const SalesCounter = () => {
                               onClick={() => addToCart(product)}
                             >
                               <CardContent className="p-4 text-center">
-                                <div className="rounded-full bg-primary/10 p-2 w-12 h-12 mx-auto mb-2 flex items-center justify-center">
-                                  <Tag className="h-6 w-6 text-primary" />
+                                <div className="w-16 h-16 mx-auto mb-2 overflow-hidden rounded-md">
+                                  {product.imageUrl ? (
+                                    <img
+                                      src={product.imageUrl}
+                                      alt={product.name}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src =
+                                          "https://via.placeholder.com/150?text=بدون+تصویر";
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="rounded-full bg-primary/10 p-2 w-full h-full flex items-center justify-center">
+                                      <Tag className="h-6 w-6 text-primary" />
+                                    </div>
+                                  )}
                                 </div>
                                 <h3 className="font-medium">{product.name}</h3>
                                 <p className="text-primary font-bold">
@@ -458,34 +653,52 @@ const SalesCounter = () => {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
-                        {customers.map((customer) => (
-                          <Card
-                            key={customer.id}
-                            className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => selectCustomer(customer)}
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <h3 className="font-medium">
-                                    {customer.name}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {customer.phone}
-                                  </p>
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="جستجو بر اساس نام یا شماره تلفن..."
+                            value={customerSearchTerm}
+                            onChange={(e) =>
+                              setCustomerSearchTerm(e.target.value)
+                            }
+                            className="pl-8 mb-4"
+                          />
+                        </div>
+
+                        {filteredCustomers.length > 0 ? (
+                          filteredCustomers.map((customer) => (
+                            <Card
+                              key={customer.id}
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => selectCustomer(customer)}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h3 className="font-medium">
+                                      {customer.name}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                      {customer.phone}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm font-medium">
+                                      {customer.loyaltyPoints} points
+                                    </p>
+                                    <p className="text-xs text-muted-foreground capitalize">
+                                      {customer.loyaltyTier} tier
+                                    </p>
+                                  </div>
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-sm font-medium">
-                                    {customer.loyaltyPoints} points
-                                  </p>
-                                  <p className="text-xs text-muted-foreground capitalize">
-                                    {customer.loyaltyTier} tier
-                                  </p>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                              </CardContent>
+                            </Card>
+                          ))
+                        ) : (
+                          <div className="text-center py-4 text-muted-foreground">
+                            مشتری یافت نشد
+                          </div>
+                        )}
                         <Button
                           className="w-full"
                           onClick={registerNewCustomer}

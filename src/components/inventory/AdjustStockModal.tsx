@@ -80,8 +80,26 @@ const AdjustStockModal = ({
                   {product.stockLevel}
                 </div>
               </div>
-              <div className="w-24 h-24 bg-gray-100 rounded-md flex items-center justify-center">
-                <span className="text-4xl font-bold">{product.stockLevel}</span>
+              <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://via.placeholder.com/150?text=بدون+تصویر";
+                      (e.target as HTMLImageElement).className =
+                        "w-full h-full object-contain p-2";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-4xl font-bold">
+                      {product.stockLevel}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
