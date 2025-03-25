@@ -43,6 +43,18 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/about" element={<About />} />
           <Route
+            path="/dashboard"
+            element={
+              isAuthenticated ? (
+                <Layout>
+                  <Home />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
             path="/sales-counter"
             element={
               isAuthenticated ? (

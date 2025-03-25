@@ -36,7 +36,7 @@ const Login = () => {
           "user",
           JSON.stringify({ email, name: "مدیر سیستم", role: "admin" }),
         );
-        navigate("/");
+        navigate("/dashboard");
       } else {
         setError("نام کاربری یا رمز عبور اشتباه است");
       }

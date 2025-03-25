@@ -83,7 +83,7 @@ const Sidebar = () => {
     {
       name: t("common.dashboard"),
       icon: <Home className="h-5 w-5" />,
-      path: "/",
+      path: "/dashboard",
     },
     {
       name: t("common.salesCounter"),
