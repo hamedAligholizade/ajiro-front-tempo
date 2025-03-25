@@ -11,6 +11,8 @@ import {
   Users,
   MessageCircle,
   Send,
+  Package,
+  ClipboardList,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -57,6 +59,16 @@ const Sidebar = () => {
       path: "/loyalty-program",
     },
     {
+      name: t("common.inventory"),
+      icon: <Package className="h-5 w-5" />,
+      path: "/inventory-management",
+    },
+    {
+      name: t("common.orders"),
+      icon: <ClipboardList className="h-5 w-5" />,
+      path: "/order-management",
+    },
+    {
       name: t("common.acquisition"),
       icon: <Users className="h-5 w-5" />,
       path: "/acquisition",
@@ -65,7 +77,7 @@ const Sidebar = () => {
       name: t("common.settings"),
       icon: <Settings className="h-5 w-5" />,
       path: "/settings",
-    },
+    }
   ];
 
   return (

@@ -9,6 +9,8 @@ import {
   ShoppingCart,
   Users,
   Send,
+  Package, // For inventory
+  ClipboardList, // For orders
 } from "lucide-react";
 
 interface ModuleCardsProps {
@@ -95,6 +97,28 @@ const ModuleCards = ({ modules }: ModuleCardsProps) => {
       ],
       path: "/loyalty-program",
       onClick: () => navigate("/loyalty-program"),
+    },
+    {
+      title: t("common.inventory"),
+      description: t("common.inventoryDescription"),
+      icon: <Package className="h-6 w-6" />,
+      stats: [
+        { label: "Products", value: "523" },
+        { label: "Low Stock", value: "12" },
+      ],
+      path: "/inventory-management",
+      onClick: () => navigate("/inventory-management"),
+    },
+    {
+      title: t("common.orders"),
+      description: t("common.ordersDescription"),
+      icon: <ClipboardList className="h-6 w-6" />,
+      stats: [
+        { label: "Pending", value: "18" },
+        { label: "Today", value: "35" },
+      ],
+      path: "/order-management",
+      onClick: () => navigate("/order-management"),
     },
   ];
 

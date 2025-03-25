@@ -1,0 +1,36 @@
+{
+  "common": {
+    "inventory": "Inventory Management",
+    "inventoryDescription": "Manage your products and stock levels",
+    "orders": "Order Management",
+    "ordersDescription": "Process and track customer orders"
+  },
+  "inventory": {
+    "title": "Inventory Management",
+    "subtitle": "Manage your products, stock levels, and suppliers",
+    "addProduct": "Add Product",
+    "searchProducts": "Search products...",
+    "totalProducts": "Total Products",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "allCategories": "All Categories",
+    "sortBy": "Sort By"
+  },
+  "orders": {
+    "title": "Order Management",
+    "subtitle": "View and manage customer orders",
+    "createOrder": "Create Order",
+    "pending": "Pending",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "allOrders": "All Orders",
+    "pendingOrders": "Pending Orders",
+    "processingOrders": "Processing Orders",
+    "shippedOrders": "Shipped Orders",
+    "deliveredOrders": "Delivered Orders",
+    "cancelledOrders": "Cancelled Orders",
+    "filterByDate": "Filter by date"
+  }
+} 

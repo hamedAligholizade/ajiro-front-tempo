@@ -12,6 +12,8 @@ import CustomerAcquisition from "./pages/acquisition";
 import Layout from "./components/layout/Layout";
 import routes from "tempo-routes";
 import { setLocale } from "./lib/i18n";
+import InventoryManagement from "./pages/inventory-management";
+import OrderManagement from "./pages/order-management";
 
 function App() {
   useEffect(() => {
@@ -96,6 +98,22 @@ function App() {
             element={
               <Layout>
                 <CustomerAcquisition />
+              </Layout>
+            }
+          />
+          <Route
+            path="/inventory-management"
+            element={
+              <Layout>
+                <InventoryManagement />
+              </Layout>
+            }
+          />
+          <Route
+            path="/order-management"
+            element={
+              <Layout>
+                <OrderManagement />
               </Layout>
             }
           />

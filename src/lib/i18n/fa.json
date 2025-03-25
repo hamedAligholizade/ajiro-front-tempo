@@ -1,0 +1,36 @@
+{
+  "common": {
+    "inventory": "مدیریت موجودی",
+    "inventoryDescription": "مدیریت محصولات و سطوح موجودی",
+    "orders": "مدیریت سفارشات",
+    "ordersDescription": "پردازش و پیگیری سفارشات مشتریان"
+  },
+  "inventory": {
+    "title": "مدیریت موجودی",
+    "subtitle": "مدیریت محصولات، سطوح موجودی و تأمین کنندگان",
+    "addProduct": "افزودن محصول",
+    "searchProducts": "جستجوی محصولات...",
+    "totalProducts": "کل محصولات",
+    "lowStock": "موجودی کم",
+    "outOfStock": "اتمام موجودی",
+    "allCategories": "همه دسته‌ها",
+    "sortBy": "مرتب‌سازی بر اساس"
+  },
+  "orders": {
+    "title": "مدیریت سفارشات",
+    "subtitle": "مشاهده و مدیریت سفارشات مشتریان",
+    "createOrder": "ایجاد سفارش",
+    "pending": "در انتظار",
+    "processing": "در حال پردازش",
+    "shipped": "ارسال شده",
+    "delivered": "تحویل داده شده",
+    "cancelled": "لغو شده",
+    "allOrders": "همه سفارشات",
+    "pendingOrders": "سفارشات در انتظار",
+    "processingOrders": "سفارشات در حال پردازش",
+    "shippedOrders": "سفارشات ارسال شده",
+    "deliveredOrders": "سفارشات تحویل داده شده",
+    "cancelledOrders": "سفارشات لغو شده",
+    "filterByDate": "فیلتر بر اساس تاریخ"
+  }
+} 

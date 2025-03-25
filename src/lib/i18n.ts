@@ -11,6 +11,8 @@ export type Translation = {
     customers: string;
     campaigns: string;
     acquisition: string;
+    inventory: string;
+    orders: string;
   };
   dashboard: {
     title: string;
@@ -148,6 +150,93 @@ export type Translation = {
     copyCode: string;
     shareOnSocialMedia: string;
   };
+  inventory: {
+    title: string;
+    subtitle: string;
+    addProduct: string;
+    searchProducts: string;
+    totalProducts: string;
+    lowStock: string;
+    outOfStock: string;
+    allCategories: string;
+    sortBy: string;
+    products: string;
+    allProducts: string;
+    analytics: string;
+    lowStockAlert: string;
+    stockHistory: string;
+    productDetails: string;
+    price: string;
+    cost: string;
+    stock: string;
+    supplier: string;
+    lastRestocked: string;
+    reorderPoint: string;
+    category: string;
+    storageLocation: string;
+    increaseStock: string;
+    decreaseStock: string;
+    inStock: string;
+    orderMore: string;
+    orderNow: string;
+    inventoryValue: string;
+    inventoryStatus: string;
+    categoryBreakdown: string;
+    edit: string;
+    adjustStock: string;
+  };
+  orders: {
+    title: string;
+    subtitle: string;
+    createOrder: string;
+    pending: string;
+    processing: string;
+    shipped: string;
+    delivered: string;
+    cancelled: string;
+    allOrders: string;
+    pendingOrders: string;
+    processingOrders: string;
+    shippedOrders: string;
+    deliveredOrders: string;
+    cancelledOrders: string;
+    filterByDate: string;
+    status: string;
+    payment: string;
+    items: string;
+    total: string;
+    changeStatus: string;
+    orderInformation: string;
+    customer: string;
+    orderTimeline: string;
+    orderItems: string;
+    orderNumber: string;
+    date: string;
+    shippingAddress: string;
+    notes: string;
+    product: string;
+    price: string;
+    quantity: string;
+    subtotal: string;
+    tax: string;
+    shipping: string;
+    grandTotal: string;
+    orderPlaced: string;
+    orderProcessing: string;
+    updateStatus: string;
+    updatePayment: string;
+    markAsPaid: string;
+    markAsUnpaid: string;
+    refund: string;
+    paid: string;
+    unpaid: string;
+    refunded: string;
+    print: string;
+    email: string;
+    searchOrders: string;
+    filter: string;
+    dateRange: string;
+  };
 };
 
 const en: Translation = {
@@ -161,6 +250,8 @@ const en: Translation = {
     customers: "Customers",
     campaigns: "Campaigns",
     acquisition: "Customer Acquisition",
+    inventory: "Inventory Management",
+    orders: "Order Management",
   },
   dashboard: {
     title: "Ajiro Dashboard",
@@ -300,6 +391,93 @@ const en: Translation = {
     copyCode: "Copy Code",
     shareOnSocialMedia: "Share on Social Media",
   },
+  inventory: {
+    title: "Inventory Management",
+    subtitle: "Manage your products, stock levels, and suppliers",
+    addProduct: "Add Product",
+    searchProducts: "Search products...",
+    totalProducts: "Total Products",
+    lowStock: "Low Stock",
+    outOfStock: "Out of Stock",
+    allCategories: "All Categories",
+    sortBy: "Sort By",
+    products: "Products",
+    allProducts: "All Products",
+    analytics: "Analytics",
+    lowStockAlert: "Low Stock Alert",
+    stockHistory: "Stock History",
+    productDetails: "Product Details",
+    price: "Price",
+    cost: "Cost",
+    stock: "Stock",
+    supplier: "Supplier",
+    lastRestocked: "Last Restocked",
+    reorderPoint: "Reorder Point",
+    category: "Category",
+    storageLocation: "Storage Location",
+    increaseStock: "Increase Stock +1",
+    decreaseStock: "Decrease Stock -1",
+    inStock: "In Stock",
+    orderMore: "Order More",
+    orderNow: "Order Now",
+    inventoryValue: "Inventory Value",
+    inventoryStatus: "Inventory Status",
+    categoryBreakdown: "Category Breakdown",
+    edit: "Edit",
+    adjustStock: "Adjust Stock",
+  },
+  orders: {
+    title: "Order Management",
+    subtitle: "View and manage customer orders",
+    createOrder: "Create Order",
+    pending: "Pending",
+    processing: "Processing",
+    shipped: "Shipped",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+    allOrders: "All Orders",
+    pendingOrders: "Pending Orders",
+    processingOrders: "Processing Orders",
+    shippedOrders: "Shipped Orders",
+    deliveredOrders: "Delivered Orders",
+    cancelledOrders: "Cancelled Orders",
+    filterByDate: "Filter by date",
+    status: "Status",
+    payment: "Payment",
+    items: "Items",
+    total: "Total",
+    changeStatus: "Change Status:",
+    orderInformation: "Order Information",
+    customer: "Customer",
+    orderTimeline: "Order Timeline",
+    orderItems: "Order Items",
+    orderNumber: "Order Number",
+    date: "Date",
+    shippingAddress: "Shipping Address",
+    notes: "Notes",
+    product: "Product",
+    price: "Price",
+    quantity: "Quantity",
+    subtotal: "Subtotal",
+    tax: "Tax",
+    shipping: "Shipping",
+    grandTotal: "Total",
+    orderPlaced: "Order Placed",
+    orderProcessing: "Order Processing",
+    updateStatus: "Update Status",
+    updatePayment: "Update Payment",
+    markAsPaid: "Mark as Paid",
+    markAsUnpaid: "Mark as Unpaid",
+    refund: "Refund",
+    paid: "Paid",
+    unpaid: "Unpaid",
+    refunded: "Refunded",
+    print: "Print",
+    email: "Email",
+    searchOrders: "Search orders...",
+    filter: "Filter",
+    dateRange: "Date Range",
+  },
 };
 
 const fa: Translation = {
@@ -313,6 +491,8 @@ const fa: Translation = {
     customers: "مشتریان",
     campaigns: "کمپین‌ها",
     acquisition: "جذب مشتری",
+    inventory: "مدیریت موجودی",
+    orders: "مدیریت سفارشات",
   },
   dashboard: {
     title: "داشبورد آجیرو",
@@ -450,6 +630,93 @@ const fa: Translation = {
     referralCode: "کد معرف",
     copyCode: "کپی کد",
     shareOnSocialMedia: "اشتراک‌گذاری در شبکه‌های اجتماعی",
+  },
+  inventory: {
+    title: "مدیریت موجودی",
+    subtitle: "مدیریت محصولات، سطوح موجودی و تأمین کنندگان",
+    addProduct: "افزودن محصول",
+    searchProducts: "جستجوی محصولات...",
+    totalProducts: "کل محصولات",
+    lowStock: "موجودی کم",
+    outOfStock: "اتمام موجودی",
+    allCategories: "همه دسته‌ها",
+    sortBy: "مرتب‌سازی بر اساس",
+    products: "محصولات",
+    allProducts: "همه محصولات",
+    analytics: "تحلیل‌ها",
+    lowStockAlert: "هشدار موجودی کم",
+    stockHistory: "تاریخچه موجودی",
+    productDetails: "جزئیات محصول",
+    price: "قیمت",
+    cost: "هزینه",
+    stock: "موجودی",
+    supplier: "تأمین کننده",
+    lastRestocked: "آخرین بازپرسازی",
+    reorderPoint: "نقطه سفارش مجدد",
+    category: "دسته‌بندی",
+    storageLocation: "محل نگهداری",
+    increaseStock: "افزایش موجودی +1",
+    decreaseStock: "کاهش موجودی -1",
+    inStock: "موجود",
+    orderMore: "سفارش بیشتر",
+    orderNow: "سفارش الان",
+    inventoryValue: "ارزش موجودی",
+    inventoryStatus: "وضعیت موجودی",
+    categoryBreakdown: "تفکیک دسته‌بندی",
+    edit: "ویرایش",
+    adjustStock: "تنظیم موجودی",
+  },
+  orders: {
+    title: "مدیریت سفارشات",
+    subtitle: "مشاهده و مدیریت سفارشات مشتریان",
+    createOrder: "ایجاد سفارش",
+    pending: "در انتظار",
+    processing: "در حال پردازش",
+    shipped: "ارسال شده",
+    delivered: "تحویل داده شده",
+    cancelled: "لغو شده",
+    allOrders: "همه سفارشات",
+    pendingOrders: "سفارشات در انتظار",
+    processingOrders: "سفارشات در حال پردازش",
+    shippedOrders: "سفارشات ارسال شده",
+    deliveredOrders: "سفارشات تحویل داده شده",
+    cancelledOrders: "سفارشات لغو شده",
+    filterByDate: "فیلتر بر اساس تاریخ",
+    status: "وضعیت",
+    payment: "پرداخت",
+    items: "اقلام",
+    total: "مجموع",
+    changeStatus: "تغییر وضعیت:",
+    orderInformation: "اطلاعات سفارش",
+    customer: "مشتری",
+    orderTimeline: "جدول زمانی سفارش",
+    orderItems: "اقلام سفارش",
+    orderNumber: "شماره سفارش",
+    date: "تاریخ",
+    shippingAddress: "آدرس ارسال",
+    notes: "یادداشت‌ها",
+    product: "محصول",
+    price: "قیمت",
+    quantity: "تعداد",
+    subtotal: "جمع جزء",
+    tax: "مالیات",
+    shipping: "هزینه ارسال",
+    grandTotal: "جمع کل",
+    orderPlaced: "سفارش ثبت شد",
+    orderProcessing: "سفارش در حال پردازش",
+    updateStatus: "بروزرسانی وضعیت",
+    updatePayment: "بروزرسانی پرداخت",
+    markAsPaid: "علامت به عنوان پرداخت شده",
+    markAsUnpaid: "علامت به عنوان پرداخت نشده",
+    refund: "بازپرداخت",
+    paid: "پرداخت شده",
+    unpaid: "پرداخت نشده",
+    refunded: "بازپرداخت شده",
+    print: "چاپ",
+    email: "ایمیل",
+    searchOrders: "جستجوی سفارشات...",
+    filter: "فیلتر",
+    dateRange: "بازه زمانی",
   },
 };
 
