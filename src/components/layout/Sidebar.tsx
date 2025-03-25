@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -17,6 +17,40 @@ import {
 
 const Sidebar = () => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  // Add toggle button to header for mobile
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (header) {
+      const existingButton = document.getElementById("mobile-menu-toggle");
+      if (!existingButton) {
+        const button = document.createElement("button");
+        button.id = "mobile-menu-toggle";
+        button.className =
+          "md:hidden flex items-center justify-center p-2 mr-2";
+        button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
+        button.onclick = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+        const firstChild = header.firstChild;
+        if (firstChild) {
+          header.insertBefore(button, firstChild);
+        } else {
+          header.appendChild(button);
+        }
+      }
+    }
+
+    return () => {
+      const button = document.getElementById("mobile-menu-toggle");
+      if (button) button.remove();
+    };
+  }, [isMobileMenuOpen]);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -68,20 +102,25 @@ const Sidebar = () => {
       icon: <ClipboardList className="h-5 w-5" />,
       path: "/order-management",
     },
-    {
-      name: t("common.acquisition"),
-      icon: <Users className="h-5 w-5" />,
-      path: "/acquisition",
-    },
+
     {
       name: t("common.settings"),
       icon: <Settings className="h-5 w-5" />,
       path: "/settings",
-    }
+    },
   ];
 
   return (
-    <div className="h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-10">
+    <div
+      className={`h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-20 transform transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
+    >
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
       <div className="p-6">
         <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
       </div>

@@ -17,8 +17,8 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen bg-background">
       <Sidebar />
       <Header />
-      <main className="pt-16 pr-64">
-        <div className="container mx-auto p-6">{children}</div>
+      <main className="pt-16 md:pr-64">
+        <div className="container mx-auto p-4 md:p-6">{children}</div>
       </main>
     </div>
   );

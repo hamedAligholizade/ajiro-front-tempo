@@ -16,6 +16,7 @@ import {
   Download,
   Calendar,
 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 const Reports = () => {
   const [timeRange, setTimeRange] = useState("week");
@@ -80,10 +81,8 @@ const Reports = () => {
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-[1200px] mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold">Reports Dashboard</h1>
-          <p className="text-muted-foreground">
-            Analytics and business insights
-          </p>
+          <h1 className="text-3xl font-bold">{t("reports.title")}</h1>
+          <p className="text-muted-foreground">{t("reports.subtitle")}</p>
         </header>
 
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -107,13 +106,13 @@ const Reports = () => {
         <Tabs defaultValue="sales" className="w-full">
           <TabsList className="w-full justify-start mb-6 overflow-x-auto">
             <TabsTrigger value="sales" className="flex items-center">
-              <BarChart2 className="mr-2 h-4 w-4" /> Sales
+              <BarChart2 className="mr-2 h-4 w-4" /> {t("reports.sales")}
             </TabsTrigger>
             <TabsTrigger value="inventory" className="flex items-center">
-              <LineChart className="mr-2 h-4 w-4" /> Inventory
+              <LineChart className="mr-2 h-4 w-4" /> {t("reports.inventory")}
             </TabsTrigger>
             <TabsTrigger value="customers" className="flex items-center">
-              <PieChart className="mr-2 h-4 w-4" /> Customers
+              <PieChart className="mr-2 h-4 w-4" /> {t("reports.customers")}
             </TabsTrigger>
           </TabsList>
 
@@ -123,7 +122,7 @@ const Reports = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Total Sales
+                    {t("reports.totalSales")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -136,7 +135,7 @@ const Reports = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Transactions
+                    {t("reports.transactions")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -149,7 +148,7 @@ const Reports = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Average Sale
+                    {t("reports.averageSale")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -169,7 +168,7 @@ const Reports = () => {
                   size="sm"
                   onClick={() => handleExport("sales")}
                 >
-                  <Download className="mr-2 h-4 w-4" /> Export
+                  <Download className="mr-2 h-4 w-4" /> {t("reports.export")}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -305,7 +304,7 @@ const Reports = () => {
                   size="sm"
                   onClick={() => handleExport("inventory")}
                 >
-                  <Download className="mr-2 h-4 w-4" /> Export
+                  <Download className="mr-2 h-4 w-4" /> {t("reports.export")}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -429,7 +428,7 @@ const Reports = () => {
                     size="sm"
                     onClick={() => handleExport("customers")}
                   >
-                    <Download className="mr-2 h-4 w-4" /> Export
+                    <Download className="mr-2 h-4 w-4" /> {t("reports.export")}
                   </Button>
                 </CardHeader>
                 <CardContent>

@@ -1,5 +1,5 @@
-import { Suspense, useEffect } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
+import { Suspense, useEffect, useState } from "react";
+import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/home";
 import SalesCounter from "./pages/sales-counter";
 import Reports from "./pages/reports";
@@ -8,14 +8,16 @@ import LoyaltyProgram from "./pages/loyalty-program";
 import Customers from "./pages/customers";
 import Campaigns from "./pages/campaigns";
 import Settings from "./pages/settings";
-import CustomerAcquisition from "./pages/acquisition";
 import Layout from "./components/layout/Layout";
+import Login from "./pages/auth/login";
 import routes from "tempo-routes";
 import { setLocale } from "./lib/i18n";
 import InventoryManagement from "./pages/inventory-management";
 import OrderManagement from "./pages/order-management";
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   useEffect(() => {
     // Set default locale to Farsi
     setLocale("fa");
@@ -23,98 +25,138 @@ function App() {
     // Set RTL direction
     document.documentElement.dir = "rtl";
     document.documentElement.classList.add("rtl");
+
+    // Check if user is logged in
+    const user = localStorage.getItem("user");
+    if (user) {
+      setIsAuthenticated(true);
+    }
   }, []);
 
   return (
     <Suspense fallback={<p>Loading...</p>}>
       <>
         <Routes>
+          <Route path="/login" element={<Login />} />
+
           <Route
             path="/"
             element={
-              <Layout>
-                <Home />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <Home />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/sales-counter"
             element={
-              <Layout>
-                <SalesCounter />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <SalesCounter />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/reports"
             element={
-              <Layout>
-                <Reports />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <Reports />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/customer-feedback"
             element={
-              <Layout>
-                <CustomerFeedback />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <CustomerFeedback />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/loyalty-program"
             element={
-              <Layout>
-                <LoyaltyProgram />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <LoyaltyProgram />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/customers"
             element={
-              <Layout>
-                <Customers />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <Customers />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/campaigns"
             element={
-              <Layout>
-                <Campaigns />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <Campaigns />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/settings"
             element={
-              <Layout>
-                <Settings />
-              </Layout>
-            }
-          />
-          <Route
-            path="/acquisition"
-            element={
-              <Layout>
-                <CustomerAcquisition />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <Settings />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/inventory-management"
             element={
-              <Layout>
-                <InventoryManagement />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <InventoryManagement />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
           <Route
             path="/order-management"
             element={
-              <Layout>
-                <OrderManagement />
-              </Layout>
+              isAuthenticated ? (
+                <Layout>
+                  <OrderManagement />
+                </Layout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
         </Routes>

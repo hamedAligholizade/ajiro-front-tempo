@@ -19,7 +19,7 @@ const Header = () => {
   };
 
   return (
-    <header className="h-16 border-b border-border bg-background fixed top-0 left-0 right-64 z-10">
+    <header className="h-16 border-b border-border bg-background fixed top-0 left-0 md:right-64 right-0 z-10">
       <div className="h-full flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={toggleTheme}>
@@ -37,6 +37,16 @@ const Header = () => {
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              localStorage.removeItem("user");
+              window.location.href = "/login";
+            }}
+          >
+            خروج
           </Button>
         </div>
       </div>
