@@ -238,3 +238,27 @@ const About = () => {
             </div>
 
             <div className="text-center p-6 rounded-lg shadow-md border border-gray-100">
+              <div className="rounded-full bg-primary/10 p-3 w-14 h-14 mx-auto mb-4 flex items-center justify-center">
+                <Target className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">فروش</h3>
+              <p className="text-gray-600 mb-4">برای اطلاعات فروش و قیمت‌گذاری</p>
+              <p className="text-primary font-medium">sales@ajiro.ir</p>
+            </div>
+
+            <div className="text-center p-6 rounded-lg shadow-md border border-gray-100">
+              <div className="rounded-full bg-primary/10 p-3 w-14 h-14 mx-auto mb-4 flex items-center justify-center">
+                <Award className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">همکاری</h3>
+              <p className="text-gray-600 mb-4">برای فرصت‌های شغلی و همکاری</p>
+              <p className="text-primary font-medium">careers@ajiro.ir</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default About;

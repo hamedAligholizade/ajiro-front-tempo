@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./components/home";
+import Home from "./pages/home";
 import SalesCounter from "./pages/sales-counter";
 import Reports from "./pages/reports";
 import CustomerFeedback from "./pages/customer-feedback";
@@ -14,7 +14,8 @@ import routes from "tempo-routes";
 import { setLocale } from "./lib/i18n";
 import InventoryManagement from "./pages/inventory-management";
 import OrderManagement from "./pages/order-management";
-
+import Landing from "./pages/landing";
+import About from "./pages/about";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -39,18 +40,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/"
-            element={
-              isAuthenticated ? (
-                <Layout>
-                  <Home />
-                </Layout>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
+          <Route path="/" element={<Landing />} />
+          <Route path="/about" element={<About />} />
           <Route
             path="/sales-counter"
             element={

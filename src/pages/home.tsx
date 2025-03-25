@@ -1,6 +1,6 @@
 import React from "react";
-import QuickStats from "./dashboard/QuickStats";
-import ModuleCards from "./dashboard/ModuleCards";
+import QuickStats from "../components/dashboard/QuickStats";
+import ModuleCards from "../components/dashboard/ModuleCards";
 import { t } from "@/lib/i18n";
 
 function Home() {
