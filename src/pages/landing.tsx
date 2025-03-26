@@ -31,8 +31,17 @@ const Landing = () => {
             <Link to="/pricing" className="text-gray-600 hover:text-primary">
               قیمت‌گذاری
             </Link>
+            <Link to="/blog" className="text-gray-600 hover:text-primary">
+              وبلاگ
+            </Link>
+            <Link to="/faq" className="text-gray-600 hover:text-primary">
+              سوالات متداول
+            </Link>
             <Link to="/about" className="text-gray-600 hover:text-primary">
               درباره ما
+            </Link>
+            <Link to="/contact" className="text-gray-600 hover:text-primary">
+              تماس با ما
             </Link>
           </nav>
           <div className="flex items-center space-x-4 space-x-reverse">
@@ -82,7 +91,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white" id="features">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">ویژگی‌های برتر</h2>
@@ -160,7 +169,7 @@ const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50" id="testimonials">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">مشتریان ما چه می‌گویند</h2>
@@ -237,7 +246,7 @@ const Landing = () => {
       </section>
 
       {/* Pricing */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white" id="pricing">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">قیمت‌گذاری ساده و شفاف</h2>

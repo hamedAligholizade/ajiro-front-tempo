@@ -16,6 +16,10 @@ import InventoryManagement from "./pages/inventory-management";
 import OrderManagement from "./pages/order-management";
 import Landing from "./pages/landing";
 import About from "./pages/about";
+import Contact from "./pages/contact";
+import Blog from "./pages/blog";
+import FAQ from "./pages/faq";
+import Register from "./pages/register";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -39,9 +43,13 @@ function App() {
       <>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           <Route path="/" element={<Landing />} />
           <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route
             path="/dashboard"
             element={
