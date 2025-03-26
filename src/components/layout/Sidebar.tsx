@@ -134,51 +134,53 @@ const Sidebar = () => {
   ];
 
   return (
-    <div
-      className={`sidebar-container h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-30 transform transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
-    >
-      {/* Overlay for mobile */}
+    <>
       {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
-      </div>
-      <nav className="flex-1 overflow-y-auto p-4">
-        <ul className="space-y-2">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                  isActive(item.path)
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted",
-                )}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-primary/10 p-1 w-10 h-10 flex items-center justify-center">
-            <Users className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium">آجیرو</p>
-            <p className="text-xs text-muted-foreground">مدیر سیستم</p>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+      <div
+        className={`sidebar-container h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-30 transform transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
+      >
+        {/* Overlay for mobile */}
+        <div className="p-6">
+          <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
+        </div>
+        <nav className="flex-1 overflow-y-auto p-4">
+          <ul className="space-y-2">
+            {navItems.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    isActive(item.path)
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted",
+                  )}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="p-4 border-t border-border">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-primary/10 p-1 w-10 h-10 flex items-center justify-center">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">آجیرو</p>
+              <p className="text-xs text-muted-foreground">مدیر سیستم</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
