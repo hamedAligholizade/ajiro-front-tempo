@@ -1,61 +1,22 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import {
-  Users,
-  Award,
-  Target,
-  Clock,
-  Heart,
-  Shield,
-} from "lucide-react";
+import { Users, Award, Target, Clock, Heart, Shield } from "lucide-react";
+import LandingHeader from "@/components/layout/LandingHeader";
+import LandingFooter from "@/components/layout/LandingFooter";
 
 const About = () => {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 fixed w-full z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Link to="/">
-              <h1 className="text-2xl font-bold text-primary">آجیرو</h1>
-            </Link>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6 space-x-reverse">
-            <Link to="/" className="text-gray-600 hover:text-primary">
-              خانه
-            </Link>
-            <Link to="/features" className="text-gray-600 hover:text-primary">
-              ویژگی‌ها
-            </Link>
-            <Link to="/pricing" className="text-gray-600 hover:text-primary">
-              قیمت‌گذاری
-            </Link>
-            <Link to="/about" className="text-primary font-medium">
-              درباره ما
-            </Link>
-          </nav>
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <Link to="/login">
-              <Button variant="outline" size="sm">
-                ورود
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button size="sm">
-                ثبت نام
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <LandingHeader />
 
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-b from-primary/5 to-white">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">درباره آجیرو</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            ما به کسب و کارهای کوچک کمک می‌کنیم تا با ابزارهای هوشمند، رشد کنند و موفق شوند
+            ما به کسب و کارهای کوچک کمک می‌کنیم تا با ابزارهای هوشمند، رشد کنند
+            و موفق شوند
           </p>
         </div>
       </section>
@@ -67,20 +28,30 @@ const About = () => {
             <div className="md:w-1/2">
               <img
                 src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80"
-                alt="تیم آجیرو"
+                alt="آجیرو"
                 className="rounded-lg shadow-lg"
               />
             </div>
             <div className="md:w-1/2">
               <h2 className="text-3xl font-bold mb-6">داستان ما</h2>
               <p className="text-gray-700 mb-4">
-                آجیرو در سال ۱۳۹۸ با هدف ارائه راهکارهای نوآورانه برای مدیریت کسب و کارهای کوچک تأسیس شد. بنیانگذاران ما، گروهی از متخصصان فناوری و کارآفرینان با تجربه در صنعت خرده‌فروشی بودند که چالش‌های مدیریت کسب و کارهای کوچک را به خوبی درک می‌کردند.
+                آجیرو با هدف ارائه راهکارهای نوآورانه برای مدیریت کسب و کارهای
+                کوچک ایجاد شد. من به عنوان یک توسعه‌دهنده با ۸ سال تجربه در صنعت
+                نرم‌افزار، چالش‌های مدیریت کسب و کارهای کوچک را به خوبی درک
+                می‌کنم.
               </p>
               <p className="text-gray-700 mb-4">
-                ما متوجه شدیم که بسیاری از کسب و کارهای کوچک در ایران از نرم‌افزارهای پیچیده و گران قیمت استفاده می‌کنند یا هنوز به روش‌های سنتی کار می‌کنند. هدف ما ایجاد یک پلتفرم ساده، مقرون به صرفه و در عین حال قدرتمند بود که تمام نیازهای یک کسب و کار کوچک را پوشش دهد.
+                متوجه شدم که بسیاری از کسب و کارهای کوچک در ایران از
+                نرم‌افزارهای پیچیده و گران قیمت استفاده می‌کنند یا هنوز به
+                روش‌های سنتی کار می‌کنند. هدف من ایجاد یک پلتفرم ساده، مقرون به
+                صرفه و در عین حال قدرتمند است که تمام نیازهای یک کسب و کار کوچک
+                را پوشش دهد.
               </p>
               <p className="text-gray-700">
-                امروز، آجیرو به بیش از ۵۰۰۰ کسب و کار کوچک در سراسر ایران خدمات ارائه می‌دهد و به آنها کمک می‌کند تا فرآیندهای خود را بهینه کنند، مشتریان خود را بهتر بشناسند و فروش خود را افزایش دهند.
+                با استفاده از ابزارهای مدرن مانند Tempo و Cursor، توانستم این
+                پلتفرم را به شکلی کارآمد و با کیفیت بالا توسعه دهم. آجیرو یک
+                شرکت کاملاً دورکار است که با تمرکز بر نوآوری و کیفیت، به دنبال
+                ارائه بهترین راهکارها برای کسب و کارهای کوچک است.
               </p>
             </div>
           </div>
@@ -93,7 +64,8 @@ const About = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-6">مأموریت و ارزش‌های ما</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              ما با تعهد به اصول و ارزش‌های خود، به دنبال ایجاد تحول در مدیریت کسب و کارهای کوچک هستیم
+              ما با تعهد به اصول و ارزش‌های خود، به دنبال ایجاد تحول در مدیریت
+              کسب و کارهای کوچک هستیم
             </p>
           </div>
 
@@ -104,7 +76,8 @@ const About = () => {
               </div>
               <h3 className="text-xl font-bold mb-3">مأموریت</h3>
               <p className="text-gray-700">
-                توانمندسازی کسب و کارهای کوچک با ابزارهای هوشمند و کاربرپسند برای رشد و موفقیت در بازار رقابتی امروز
+                توانمندسازی کسب و کارهای کوچک با ابزارهای هوشمند و کاربرپسند
+                برای رشد و موفقیت در بازار رقابتی امروز
               </p>
             </div>
 
@@ -114,7 +87,8 @@ const About = () => {
               </div>
               <h3 className="text-xl font-bold mb-3">چشم‌انداز</h3>
               <p className="text-gray-700">
-                تبدیل شدن به برترین پلتفرم مدیریت کسب و کار کوچک در خاورمیانه و کمک به رشد اقتصادی از طریق توانمندسازی کارآفرینان
+                تبدیل شدن به برترین پلتفرم مدیریت کسب و کار کوچک در خاورمیانه و
+                کمک به رشد اقتصادی از طریق توانمندسازی کارآفرینان
               </p>
             </div>
 
@@ -124,70 +98,55 @@ const About = () => {
               </div>
               <h3 className="text-xl font-bold mb-3">ارزش‌ها</h3>
               <p className="text-gray-700">
-                سادگی، نوآوری، پاسخگویی، شفافیت و تعهد به موفقیت مشتریان، اصول اساسی ما در ارائه خدمات هستند
+                سادگی، نوآوری، پاسخگویی، شفافیت و تعهد به موفقیت مشتریان، اصول
+                اساسی ما در ارائه خدمات هستند
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Team */}
+      {/* Skills */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-6">تیم ما</h2>
+            <h2 className="text-3xl font-bold mb-6">مهارت‌های ما</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              گروهی از متخصصان با تجربه که با اشتیاق برای موفقیت شما کار می‌کنند
+              با استفاده از فناوری‌های مدرن، راهکارهای کارآمد ارائه می‌دهیم
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-40 h-40 rounded-full overflow-hidden mx-auto mb-4">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=ceo"
-                  alt="مدیرعامل"
-                  className="w-full h-full object-cover"
-                />
+            <div className="text-center bg-white p-6 rounded-lg shadow-md">
+              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 bg-primary/10 flex items-center justify-center">
+                <Shield className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold">محمد احمدی</h3>
-              <p className="text-gray-600">مدیرعامل و بنیانگذار</p>
+              <h3 className="text-xl font-bold">توسعه فرانت‌اند</h3>
+              <p className="text-gray-600">React، TypeScript، Tailwind CSS</p>
             </div>
 
-            <div className="text-center">
-              <div className="w-40 h-40 rounded-full overflow-hidden mx-auto mb-4">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=cto"
-                  alt="مدیر فنی"
-                  className="w-full h-full object-cover"
-                />
+            <div className="text-center bg-white p-6 rounded-lg shadow-md">
+              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 bg-primary/10 flex items-center justify-center">
+                <Award className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold">سارا رضایی</h3>
-              <p className="text-gray-600">مدیر فنی</p>
+              <h3 className="text-xl font-bold">طراحی UI/UX</h3>
+              <p className="text-gray-600">تجربه کاربری روان و طراحی زیبا</p>
             </div>
 
-            <div className="text-center">
-              <div className="w-40 h-40 rounded-full overflow-hidden mx-auto mb-4">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=cmo"
-                  alt="مدیر بازاریابی"
-                  className="w-full h-full object-cover"
-                />
+            <div className="text-center bg-white p-6 rounded-lg shadow-md">
+              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 bg-primary/10 flex items-center justify-center">
+                <Target className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold">علی کریمی</h3>
-              <p className="text-gray-600">مدیر بازاریابی</p>
+              <h3 className="text-xl font-bold">توسعه بک‌اند</h3>
+              <p className="text-gray-600">Node.js، API، پایگاه داده</p>
             </div>
 
-            <div className="text-center">
-              <div className="w-40 h-40 rounded-full overflow-hidden mx-auto mb-4">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=cpo"
-                  alt="مدیر محصول"
-                  className="w-full h-full object-cover"
-                />
+            <div className="text-center bg-white p-6 rounded-lg shadow-md">
+              <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 bg-primary/10 flex items-center justify-center">
+                <Heart className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-bold">مریم نوری</h3>
-              <p className="text-gray-600">مدیر محصول</p>
+              <h3 className="text-xl font-bold">پشتیبانی مشتری</h3>
+              <p className="text-gray-600">پاسخگویی سریع و راهنمایی کامل</p>
             </div>
           </div>
         </div>
@@ -223,7 +182,7 @@ const About = () => {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-6">تماس با ما</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              سوالی دارید؟ تیم ما آماده پاسخگویی به شماست
+              سوالی دارید؟ آماده پاسخگویی به شما هستم
             </p>
           </div>
 
@@ -242,7 +201,9 @@ const About = () => {
                 <Target className="h-7 w-7 text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-2">فروش</h3>
-              <p className="text-gray-600 mb-4">برای اطلاعات فروش و قیمت‌گذاری</p>
+              <p className="text-gray-600 mb-4">
+                برای اطلاعات فروش و قیمت‌گذاری
+              </p>
               <p className="text-primary font-medium">sales@ajiro.ir</p>
             </div>
 
@@ -251,12 +212,14 @@ const About = () => {
                 <Award className="h-7 w-7 text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-2">همکاری</h3>
-              <p className="text-gray-600 mb-4">برای فرصت‌های شغلی و همکاری</p>
-              <p className="text-primary font-medium">careers@ajiro.ir</p>
+              <p className="text-gray-600 mb-4">برای پیشنهادات همکاری</p>
+              <p className="text-primary font-medium">hello@ajiro.ir</p>
             </div>
           </div>
         </div>
       </section>
+
+      <LandingFooter />
     </div>
   );
 };

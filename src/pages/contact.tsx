@@ -4,56 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "react-router-dom";
 import { ArrowRight, Mail, MapPin, Phone } from "lucide-react";
+import LandingHeader from "@/components/layout/LandingHeader";
+import LandingFooter from "@/components/layout/LandingFooter";
 
 const Contact = () => {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 fixed w-full z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Link to="/">
-              <h1 className="text-2xl font-bold text-primary">آجیرو</h1>
-            </Link>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6 space-x-reverse">
-            <Link to="/" className="text-gray-600 hover:text-primary">
-              خانه
-            </Link>
-            <Link to="/features" className="text-gray-600 hover:text-primary">
-              ویژگی‌ها
-            </Link>
-            <Link to="/pricing" className="text-gray-600 hover:text-primary">
-              قیمت‌گذاری
-            </Link>
-            <Link to="/blog" className="text-gray-600 hover:text-primary">
-              وبلاگ
-            </Link>
-            <Link to="/faq" className="text-gray-600 hover:text-primary">
-              سوالات متداول
-            </Link>
-            <Link to="/about" className="text-gray-600 hover:text-primary">
-              درباره ما
-            </Link>
-            <Link
-              to="/contact"
-              className="text-gray-600 hover:text-primary font-bold"
-            >
-              تماس با ما
-            </Link>
-          </nav>
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <Link to="/login">
-              <Button variant="outline" size="sm">
-                ورود
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button size="sm">ثبت نام</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <LandingHeader />
 
       {/* Contact Section */}
       <section className="pt-32 pb-20">
@@ -189,14 +146,20 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Map Section */}
+      {/* Remote Work Section */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-4 text-center">شرکت دورکار</h2>
+            <p className="text-gray-600 text-center mb-6">
+              آجیرو یک شرکت کاملاً دورکار است. ما معتقدیم که کار با کیفیت نیازی
+              به حضور فیزیکی ندارد و با استفاده از ابزارهای ارتباطی مدرن،
+              می‌توانیم بهترین خدمات را به مشتریان خود ارائه دهیم.
+            </p>
             <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?w=1200&q=80"
-                alt="نقشه دفتر آجیرو"
+                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80"
+                alt="کار از راه دور"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -204,111 +167,7 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">آجیرو</h3>
-              <p className="text-gray-400">راهکار جامع مدیریت کسب و کار کوچک</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">محصول</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    to="/features"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    ویژگی‌ها
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/pricing"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    قیمت‌گذاری
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/testimonials"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    نظرات مشتریان
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/faq" className="text-gray-400 hover:text-white">
-                    سوالات متداول
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">شرکت</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link to="/about" className="text-gray-400 hover:text-white">
-                    درباره ما
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/contact"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    تماس با ما
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/careers"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    فرصت‌های شغلی
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/blog" className="text-gray-400 hover:text-white">
-                    وبلاگ
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">قانونی</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    to="/privacy"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    حریم خصوصی
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/terms" className="text-gray-400 hover:text-white">
-                    شرایط استفاده
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/security"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    امنیت
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>© {new Date().getFullYear()} آجیرو. تمامی حقوق محفوظ است.</p>
-          </div>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 };
