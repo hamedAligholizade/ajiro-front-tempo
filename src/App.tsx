@@ -17,6 +17,8 @@ import OrderManagement from "./pages/order-management";
 import Landing from "./pages/landing";
 import About from "./pages/about";
 import Contact from "./pages/contact";
+import Pricing from "./pages/pricing";
+import Features from "./pages/features";
 import Blog from "./pages/blog";
 import FAQ from "./pages/faq";
 import Register from "./pages/register";
@@ -47,6 +49,8 @@ function App() {
 
           <Route path="/" element={<Landing />} />
           <Route path="/about" element={<About />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/features" element={<Features />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/faq" element={<FAQ />} />
