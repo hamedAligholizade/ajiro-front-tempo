@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -13,35 +13,35 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { t } from "@/lib/i18n";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { login, clearError } from "@/redux/slices/authSlice";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
+  
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { isLoading, error, isAuthenticated } = useAppSelector(state => state.auth);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Clear any errors when component mounts
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    // Simulate login - in a real app, this would be an API call
-    setTimeout(() => {
-      if (email === "admin@ajiro.ir" && password === "password") {
-        // Store user info in localStorage or a state management solution
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ email, name: "مدیر سیستم", role: "admin" }),
-        );
-        navigate("/dashboard");
-      } else {
-        setError("نام کاربری یا رمز عبور اشتباه است");
-      }
-      setIsLoading(false);
-    }, 1000);
+    
+    // Dispatch login action
+    dispatch(login({ email, password }));
   };
 
   return (
@@ -67,21 +67,18 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">رمز عبور</Label>
-                <a
-                  href="#"
+                <Link
+                  to="/auth/forgot-password"
                   className="text-sm text-primary hover:underline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert("بازیابی رمز عبور");
-                  }}
                 >
                   فراموشی رمز عبور؟
-                </a>
+                </Link>
               </div>
               <Input
                 id="password"
@@ -89,6 +86,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="flex items-center space-x-2 space-x-reverse">
@@ -96,6 +94,7 @@ const Login = () => {
                 id="remember"
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                disabled={isLoading}
               />
               <Label
                 htmlFor="remember"
@@ -104,9 +103,19 @@ const Login = () => {
                 مرا به خاطر بسپار
               </Label>
             </div>
+            <div className="text-sm text-center mt-4">
+              حساب کاربری ندارید؟{" "}
+              <Link to="/auth/register" className="text-primary hover:underline">
+                ثبت نام کنید
+              </Link>
+            </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
               {isLoading ? "در حال ورود..." : "ورود"}
             </Button>
           </CardFooter>

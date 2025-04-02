@@ -91,12 +91,12 @@ const LandingHeader = () => {
           </nav>
 
           <div className="flex items-center space-x-4 space-x-reverse">
-            <Link to="/login" className="hidden md:block">
+            <Link to="/auth/login" className="hidden md:block">
               <Button variant="outline" size="sm">
                 ورود
               </Button>
             </Link>
-            <Link to="/register" className="hidden md:block">
+            <Link to="/auth/register" className="hidden md:block">
               <Button size="sm">ثبت نام</Button>
             </Link>
 
@@ -162,12 +162,12 @@ const LandingHeader = () => {
                 تماس با ما
               </Link>
               <div className="flex space-x-4 space-x-reverse pt-2">
-                <Link to="/login" className="flex-1">
+                <Link to="/auth/login" className="flex-1">
                   <Button variant="outline" size="sm" className="w-full">
                     ورود
                   </Button>
                 </Link>
-                <Link to="/register" className="flex-1">
+                <Link to="/auth/register" className="flex-1">
                   <Button size="sm" className="w-full">
                     ثبت نام
                   </Button>

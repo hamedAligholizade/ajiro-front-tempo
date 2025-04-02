@@ -13,11 +13,14 @@ import {
   Send,
   Package,
   ClipboardList,
+  Store,
 } from "lucide-react";
+import { useAppSelector } from "@/redux/hooks";
 
 const Sidebar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, shop } = useAppSelector((state) => state.auth);
 
   // Close sidebar when route changes on mobile or when clicking outside
   useEffect(() => {
@@ -147,6 +150,12 @@ const Sidebar = () => {
         {/* Overlay for mobile */}
         <div className="p-6">
           <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
+          {shop && (
+            <div className="flex items-center gap-2 mt-2 text-primary">
+              <Store className="h-4 w-4" />
+              <span className="text-sm font-medium">{shop.name}</span>
+            </div>
+          )}
         </div>
         <nav className="flex-1 overflow-y-auto p-4">
           <ul className="space-y-2">
@@ -174,8 +183,17 @@ const Sidebar = () => {
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium">آجیرو</p>
-              <p className="text-xs text-muted-foreground">مدیر سیستم</p>
+              {user ? (
+                <>
+                  <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
+                  <p className="text-xs text-muted-foreground">{user.role}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium">آجیرو</p>
+                  <p className="text-xs text-muted-foreground">مدیر سیستم</p>
+                </>
+              )}
             </div>
           </div>
         </div>

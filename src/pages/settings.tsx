@@ -1,17 +1,77 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { t } from "@/lib/i18n";
-import { User, Store, Package, Bell, Shield, CreditCard } from "lucide-react";
+import { User, Store, Package, Bell, Shield, CreditCard, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppSelector } from "@/redux/hooks";
+import shopService, { ShopUser } from "@/api/services/shopService";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Settings = () => {
+  const { shop } = useAppSelector(state => state.auth);
+  const [shopUsers, setShopUsers] = useState<ShopUser[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    email: '',
+    role: 'cashier'
+  });
+
+  // Fetch shop users when component mounts
+  useEffect(() => {
+    if (shop) {
+      const fetchShopUsers = async () => {
+        setIsLoading(true);
+        try {
+          const response = await shopService.getShopUsers(shop.id);
+          setShopUsers(response);
+        } catch (err: any) {
+          setError(err.response?.data?.message || 'Failed to load shop users');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchShopUsers();
+    }
+  }, [shop]);
+
+  const handleAddUser = async () => {
+    if (!newUser.email) {
+      setError('لطفاً ایمیل کاربر را وارد کنید');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await shopService.addUserToShop(shop!.id, newUser);
+      
+      // Refresh user list
+      const response = await shopService.getShopUsers(shop!.id);
+      setShopUsers(response);
+      
+      // Reset and close modal
+      setNewUser({ email: '', role: 'cashier' });
+      setShowAddUserModal(false);
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'خطا در افزودن کاربر');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="container py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -122,7 +182,8 @@ const Settings = () => {
                   <input
                     type="text"
                     className="w-full p-2 border rounded-md"
-                    defaultValue="آجیرو"
+                    defaultValue={shop?.name || ""}
+                    placeholder="نام فروشگاه خود را وارد کنید"
                   />
                 </div>
                 <div className="space-y-2">
@@ -155,6 +216,74 @@ const Settings = () => {
                   </select>
                 </div>
               </div>
+              
+              {/* Shop Users Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-4">کاربران فروشگاه</h3>
+                <div className="border rounded-md">
+                  <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
+                    <div className="font-medium">لیست کاربران</div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowAddUserModal(true)}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      افزودن کاربر
+                    </Button>
+                  </div>
+                  
+                  {isLoading ? (
+                    <div className="p-8 text-center">
+                      <p>در حال بارگذاری...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="p-4 text-center text-red-600">
+                      <p>{error}</p>
+                    </div>
+                  ) : shopUsers.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <p>هیچ کاربری برای این فروشگاه یافت نشد</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {shopUsers.map(user => (
+                        <div key={user.id} className="p-3 flex justify-between items-center">
+                          <div>
+                            <div className="font-medium">{user.firstName} {user.lastName}</div>
+                            <div className="text-sm text-muted-foreground">{user.email}</div>
+                            <div className="text-xs text-primary">{user.role}</div>
+                          </div>
+                          <div className="flex space-x-2 space-x-reverse">
+                            <Button variant="ghost" size="sm">ویرایش</Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-500"
+                              onClick={() => {
+                                if (confirm(`آیا از حذف ${user.firstName} ${user.lastName} اطمینان دارید؟`)) {
+                                  // TODO: Implement removeUserFromShop
+                                  shopService.removeUserFromShop(shop.id, user.id)
+                                    .then(() => {
+                                      // Remove user from state
+                                      setShopUsers(shopUsers.filter(u => u.id !== user.id));
+                                    })
+                                    .catch(err => {
+                                      setError(err.response?.data?.message || 'خطا در حذف کاربر');
+                                    });
+                                }
+                              }}
+                            >
+                              حذف
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               <div className="mt-4">
                 <Button type="button">{t("settings.saveChanges")}</Button>
               </div>
@@ -677,6 +806,69 @@ const Settings = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add User Modal */}
+      <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>افزودن کاربر به فروشگاه</DialogTitle>
+            <DialogDescription>
+              ایمیل کاربر و نقش او را وارد کنید. اگر کاربر در سیستم وجود نداشته باشد، یک دعوتنامه برای او ارسال خواهد شد.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
+              {error}
+            </div>
+          )}
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                ایمیل
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                className="col-span-3"
+                value={newUser.email}
+                onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="role" className="text-right">
+                نقش
+              </Label>
+              <select 
+                id="role"
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={newUser.role}
+                onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+              >
+                <option value="manager">مدیر</option>
+                <option value="cashier">صندوقدار</option>
+                <option value="inventory">انباردار</option>
+                <option value="staff">کارمند</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setError(null);
+                setShowAddUserModal(false);
+              }}
+            >
+              انصراف
+            </Button>
+            <Button onClick={handleAddUser} disabled={isLoading}>
+              {isLoading ? 'در حال افزودن...' : 'افزودن'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,11 +1,14 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { setLocale, getLocale } from "@/lib/i18n";
-import { Bell, Sun, Moon } from "lucide-react";
+import { Bell, Sun, Moon, Store } from "lucide-react";
+import LogoutButton from "@/components/auth/LogoutButton";
+import { useAppSelector } from "@/redux/hooks";
 
 const Header = () => {
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const [currentLocale, setCurrentLocale] = React.useState(getLocale());
+  const { user, shop } = useAppSelector((state) => state.auth);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -38,16 +41,20 @@ const Header = () => {
             <Bell className="h-5 w-5" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              localStorage.removeItem("user");
-              window.location.href = "/login";
-            }}
-          >
-            خروج
-          </Button>
+          <div className="flex items-center gap-3">
+            {shop && (
+              <div className="hidden md:flex items-center gap-1.5 border rounded-md px-2 py-1 text-sm bg-gray-50">
+                <Store className="h-4 w-4 text-primary" />
+                <span>{shop.name}</span>
+              </div>
+            )}
+            {user && (
+              <span className="text-sm hidden md:inline">
+                {user.firstName} {user.lastName}
+              </span>
+            )}
+            <LogoutButton />
+          </div>
         </div>
       </div>
     </header>
