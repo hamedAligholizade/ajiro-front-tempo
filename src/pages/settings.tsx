@@ -9,10 +9,12 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { t } from "@/lib/i18n";
-import { User, Store, Package, Bell, Shield, CreditCard, UserPlus, X } from "lucide-react";
+import { User, Store, Package, Bell, Shield, CreditCard, UserPlus, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/redux/hooks";
 import shopService, { ShopUser } from "@/api/services/shopService";
+import categoryService, { Category } from "@/api/services/categoryService";
+import unitService, { Unit } from "@/api/services/unitService";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,12 +22,22 @@ import { Label } from "@/components/ui/label";
 const Settings = () => {
   const { shop } = useAppSelector(state => state.auth);
   const [shopUsers, setShopUsers] = useState<ShopUser[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newUser, setNewUser] = useState({
     email: '',
     role: 'cashier'
+  });
+  
+  // New states for product settings
+  const [newCategory, setNewCategory] = useState('');
+  const [newUnit, setNewUnit] = useState({ name: '', abbreviation: '' });
+  const [taxSettings, setTaxSettings] = useState({
+    tax_enabled: true,
+    tax_rate: 9
   });
 
   // Fetch shop users when component mounts
@@ -38,12 +50,47 @@ const Settings = () => {
           setShopUsers(response);
         } catch (err: any) {
           setError(err.response?.data?.message || 'Failed to load shop users');
+          console.error('Error fetching shop users:', err);
         } finally {
           setIsLoading(false);
         }
       };
 
       fetchShopUsers();
+    }
+  }, [shop]);
+
+  // Fetch categories, units and tax settings when component mounts
+  useEffect(() => {
+    if (shop) {
+      const fetchProductSettings = async () => {
+        setIsLoading(true);
+        try {
+          // Load categories
+          const categoriesResponse = await categoryService.getCategories();
+          setCategories(categoriesResponse);
+          
+          // Load units
+          const unitsResponse = await unitService.getUnits();
+          setUnits(unitsResponse);
+          
+          // Load shop details to get tax settings
+          const shopDetails = await shopService.getShopDetails();
+          if (shopDetails.tax_enabled !== undefined && shopDetails.tax_rate !== undefined) {
+            setTaxSettings({
+              tax_enabled: shopDetails.tax_enabled,
+              tax_rate: shopDetails.tax_rate
+            });
+          }
+        } catch (err: any) {
+          console.error('Error loading product settings:', err);
+          setError(err.response?.data?.message || 'Failed to load product settings');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchProductSettings();
     }
   }, [shop]);
 
@@ -55,18 +102,155 @@ const Settings = () => {
 
     try {
       setIsLoading(true);
-      await shopService.addUserToShop(shop!.id, newUser);
-      
-      // Refresh user list
-      const response = await shopService.getShopUsers(shop!.id);
-      setShopUsers(response);
-      
-      // Reset and close modal
-      setNewUser({ email: '', role: 'cashier' });
-      setShowAddUserModal(false);
       setError(null);
+      
+      const response = await shopService.addUserToShop(shop!.id, {
+        email: newUser.email,
+        role: newUser.role
+      });
+      
+      if (response.success) {
+        // Refresh user list
+        const users = await shopService.getShopUsers(shop!.id);
+        setShopUsers(users);
+        
+        // Reset and close modal
+        setNewUser({ email: '', role: 'cashier' });
+        setShowAddUserModal(false);
+      } else {
+        setError(response.message || 'خطا در افزودن کاربر');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'خطا در افزودن کاربر');
+      console.error('Error adding user:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveUser = async (userId: string, userName: string) => {
+    if (confirm(`آیا از حذف ${userName} اطمینان دارید؟`)) {
+      try {
+        setIsLoading(true);
+        
+        const response = await shopService.removeUserFromShop(shop!.id, userId);
+        
+        if (response.success) {
+          // Update the users list by removing the deleted user
+          setShopUsers(shopUsers.filter(u => u.id !== userId));
+        } else {
+          setError(response.message || 'خطا در حذف کاربر');
+        }
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'خطا در حذف کاربر');
+        console.error('Error removing user:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Handle adding a new category
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) {
+      setError('لطفاً نام دسته‌بندی را وارد کنید');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await categoryService.createCategory({
+        name: newCategory
+      });
+      
+      // Add new category to the list
+      setCategories([...categories, response]);
+      
+      // Clear input
+      setNewCategory('');
+      setError(null);
+    } catch (err: any) {
+      console.error('Error adding category:', err);
+      setError(err.response?.data?.message || 'خطا در افزودن دسته‌بندی');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle deleting a category
+  const handleDeleteCategory = async (id: number) => {
+    if (confirm('آیا از حذف این دسته‌بندی اطمینان دارید؟')) {
+      try {
+        setIsLoading(true);
+        await categoryService.deleteCategory(id);
+        
+        // Remove category from the list
+        setCategories(categories.filter(category => category.id !== id));
+      } catch (err: any) {
+        console.error('Error deleting category:', err);
+        setError(err.response?.data?.message || 'خطا در حذف دسته‌بندی');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Handle adding a new unit
+  const handleAddUnit = async () => {
+    if (!newUnit.name.trim() || !newUnit.abbreviation.trim()) {
+      setError('لطفاً نام و اختصار واحد را وارد کنید');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await unitService.createUnit({
+        name: newUnit.name,
+        abbreviation: newUnit.abbreviation
+      });
+      
+      // Add new unit to the list
+      setUnits([...units, response]);
+      
+      // Clear input
+      setNewUnit({ name: '', abbreviation: '' });
+      setError(null);
+    } catch (err: any) {
+      console.error('Error adding unit:', err);
+      setError(err.response?.data?.message || 'خطا در افزودن واحد');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle deleting a unit
+  const handleDeleteUnit = async (id: number) => {
+    if (confirm('آیا از حذف این واحد اطمینان دارید؟')) {
+      try {
+        setIsLoading(true);
+        await unitService.deleteUnit(id);
+        
+        // Remove unit from the list
+        setUnits(units.filter(unit => unit.id !== id));
+      } catch (err: any) {
+        console.error('Error deleting unit:', err);
+        setError(err.response?.data?.message || 'خطا در حذف واحد. ممکن است این واحد در محصولات استفاده شده باشد.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Handle saving tax settings
+  const handleSaveTaxSettings = async () => {
+    try {
+      setIsLoading(true);
+      await shopService.updateTaxSettings(taxSettings);
+      setError(null);
+      alert('تنظیمات مالیات با موفقیت ذخیره شد');
+    } catch (err: any) {
+      console.error('Error saving tax settings:', err);
+      setError(err.response?.data?.message || 'خطا در ذخیره تنظیمات مالیات');
     } finally {
       setIsLoading(false);
     }
@@ -260,19 +444,7 @@ const Settings = () => {
                               variant="ghost" 
                               size="sm" 
                               className="text-red-500"
-                              onClick={() => {
-                                if (confirm(`آیا از حذف ${user.firstName} ${user.lastName} اطمینان دارید؟`)) {
-                                  // TODO: Implement removeUserFromShop
-                                  shopService.removeUserFromShop(shop.id, user.id)
-                                    .then(() => {
-                                      // Remove user from state
-                                      setShopUsers(shopUsers.filter(u => u.id !== user.id));
-                                    })
-                                    .catch(err => {
-                                      setError(err.response?.data?.message || 'خطا در حذف کاربر');
-                                    });
-                                }
-                              }}
+                              onClick={() => handleRemoveUser(user.id, `${user.firstName} ${user.lastName}`)}
                             >
                               حذف
                             </Button>
@@ -300,6 +472,12 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {error && (
+                <div className="p-3 mb-4 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
+                  {error}
+                </div>
+              )}
+              
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -307,74 +485,38 @@ const Settings = () => {
                       دسته‌بندی محصولات
                     </label>
                     <div className="border rounded-md p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>نوشیدنی‌ها</span>
-                        <button className="text-red-500 hover:text-red-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>غذاها</span>
-                        <button className="text-red-500 hover:text-red-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>لوازم التحریر</span>
-                        <button className="text-red-500 hover:text-red-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
+                      {isLoading ? (
+                        <div className="text-center py-2">در حال بارگذاری...</div>
+                      ) : categories.length === 0 ? (
+                        <div className="text-center py-2 text-muted-foreground">هیچ دسته‌بندی یافت نشد</div>
+                      ) : (
+                        categories.map(category => (
+                          <div key={category.id} className="flex items-center justify-between">
+                            <span>{category.name}</span>
+                            <button 
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleDeleteCategory(category.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
                     <div className="flex mt-2">
                       <input
                         type="text"
                         className="flex-1 p-2 border rounded-r-none rounded-md"
                         placeholder="دسته‌بندی جدید"
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
                       />
-                      <button className="bg-primary text-primary-foreground p-2 rounded-l-md">
+                      <button 
+                        className="bg-primary text-primary-foreground p-2 rounded-l-md"
+                        onClick={handleAddCategory}
+                        disabled={isLoading}
+                      >
                         افزودن
                       </button>
                     </div>
@@ -385,74 +527,47 @@ const Settings = () => {
                       واحدهای اندازه‌گیری
                     </label>
                     <div className="border rounded-md p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>عدد</span>
-                        <button className="text-red-500 hover:text-red-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>کیلوگرم</span>
-                        <button className="text-red-500 hover:text-red-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>لیتر</span>
-                        <button className="text-red-500 hover:text-red-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </button>
-                      </div>
+                      {isLoading ? (
+                        <div className="text-center py-2">در حال بارگذاری...</div>
+                      ) : units.length === 0 ? (
+                        <div className="text-center py-2 text-muted-foreground">هیچ واحدی یافت نشد</div>
+                      ) : (
+                        units.map(unit => (
+                          <div key={unit.id} className="flex items-center justify-between">
+                            <span>{unit.name} ({unit.abbreviation})</span>
+                            <button 
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleDeleteUnit(unit.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
-                    <div className="flex mt-2">
-                      <input
-                        type="text"
-                        className="flex-1 p-2 border rounded-r-none rounded-md"
-                        placeholder="واحد جدید"
-                      />
-                      <button className="bg-primary text-primary-foreground p-2 rounded-l-md">
+                    <div className="flex gap-2 mt-2">
+                      <div className="flex-1 flex">
+                        <input
+                          type="text"
+                          className="flex-1 p-2 border rounded-r-none rounded-md"
+                          placeholder="نام واحد"
+                          value={newUnit.name}
+                          onChange={(e) => setNewUnit({...newUnit, name: e.target.value})}
+                        />
+                        <input
+                          type="text"
+                          className="w-20 p-2 border-y border-r rounded-r-md"
+                          placeholder="اختصار"
+                          value={newUnit.abbreviation}
+                          onChange={(e) => setNewUnit({...newUnit, abbreviation: e.target.value})}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddUnit()}
+                        />
+                      </div>
+                      <button 
+                        className="bg-primary text-primary-foreground p-2 rounded-md"
+                        onClick={handleAddUnit}
+                        disabled={isLoading}
+                      >
                         افزودن
                       </button>
                     </div>
@@ -470,7 +585,9 @@ const Settings = () => {
                         <input
                           type="number"
                           className="w-full p-2 border rounded-md"
-                          defaultValue="9"
+                          value={taxSettings.tax_rate}
+                          onChange={(e) => setTaxSettings({...taxSettings, tax_rate: parseInt(e.target.value) || 0})}
+                          disabled={!taxSettings.tax_enabled}
                         />
                         <span className="mr-2">%</span>
                       </div>
@@ -480,15 +597,21 @@ const Settings = () => {
                         type="checkbox"
                         className="rounded"
                         id="tax-enabled"
-                        defaultChecked
+                        checked={taxSettings.tax_enabled}
+                        onChange={(e) => setTaxSettings({...taxSettings, tax_enabled: e.target.checked})}
                       />
                       <label htmlFor="tax-enabled">فعال‌سازی مالیات</label>
                     </div>
                   </div>
                 </div>
 
-                <Button type="button" className="mt-4">
-                  {t("settings.saveChanges")}
+                <Button 
+                  type="button" 
+                  className="mt-4"
+                  onClick={handleSaveTaxSettings}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'در حال ذخیره...' : t("settings.saveChanges")}
                 </Button>
               </div>
             </CardContent>

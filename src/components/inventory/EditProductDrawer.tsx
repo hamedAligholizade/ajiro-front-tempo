@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,33 +20,22 @@ import {
 } from "@/components/ui/select";
 import { Upload, X, ImagePlus, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import productService, { CreateProductData } from "@/api/services/productService";
-import { formatImageUrl } from '../../utils/imageUtils';
+import productService, { Product } from "@/api/services/productService";
 
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface AddProductModalProps {
+interface EditProductDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddProduct: (product: any) => void;
-  categories: Category[];
+  product: any;
+  onUpdateProduct: (updatedProduct: any) => void;
 }
 
-const AddProductModal = ({
+const EditProductDrawer = ({
   open,
   onOpenChange,
-  onAddProduct,
-  categories,
-}: AddProductModalProps) => {
+  product,
+  onUpdateProduct,
+}: EditProductDrawerProps) => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
-  
   const [formData, setFormData] = useState({
     name: "",
     sku: "",
@@ -60,13 +49,36 @@ const AddProductModal = ({
     description: "",
     imageUrl: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when modal opens
+  // Initialize form data when product changes
   useEffect(() => {
-    if (open) {
-      resetForm();
+    if (product) {
+      setFormData({
+        name: product.name || "",
+        sku: product.sku || "",
+        category: product.category || "",
+        price: product.price?.toString() || "",
+        cost: product.cost?.toString() || "",
+        stockLevel: product.stockLevel?.toString() || "",
+        reorderPoint: product.reorderPoint?.toString() || "",
+        supplier: product.supplier || "",
+        location: product.location || "",
+        description: product.description || "",
+        imageUrl: product.imageUrl || "",
+      });
+
+      // Set image preview if product has an image
+      if (product.imageUrl) {
+        setImagePreview(product.imageUrl);
+      } else {
+        setImagePreview("");
+      }
     }
-  }, [open]);
+  }, [product]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -111,10 +123,16 @@ const AddProductModal = ({
 
   const clearImage = () => {
     setImageFile(null);
-    setImagePreview("");
-    // Free memory used by object URL
-    if (imagePreview) {
+    
+    // Only clear preview if it's a blob URL, not a server URL
+    if (imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview);
+      setImagePreview("");
+    }
+    
+    // If we're keeping the server URL but want to indicate removal
+    if (formData.imageUrl) {
+      setFormData(prev => ({ ...prev, imageUrl: "" }));
     }
   };
 
@@ -124,8 +142,8 @@ const AddProductModal = ({
     try {
       setIsSubmitting(true);
       
-      // Create a new product object
-      const productData: CreateProductData = {
+      // Create a product object for update
+      const productData = {
         name: formData.name,
         sku: formData.sku,
         category_id: formData.category,
@@ -134,26 +152,24 @@ const AddProductModal = ({
         selling_price: parseFloat(formData.price),
         stock_quantity: parseInt(formData.stockLevel),
         reorder_level: parseInt(formData.reorderPoint),
-        is_active: true,
-        is_taxable: true,
+        supplier: formData.supplier,
         location: formData.location
       };
       
-      // Create product in API
-      const newProduct = await productService.createProduct(productData);
+      // Update product in API
+      const updatedProduct = await productService.updateProduct(product.id, productData);
       
-      // Upload image if one was selected
-      let imageUrl = '';
+      // Upload image if a new one was selected
       if (imageFile) {
         setIsUploading(true);
         try {
-          imageUrl = await productService.uploadProductImage(newProduct.id, imageFile);
-          newProduct.image_url = imageUrl;
+          const imageUrl = await productService.uploadProductImage(product.id, imageFile);
+          updatedProduct.image_url = imageUrl;
         } catch (error) {
           console.error('Error uploading image:', error);
           toast({
             title: "خطا در آپلود تصویر",
-            description: "محصول ایجاد شد اما آپلود تصویر با مشکل مواجه شد",
+            description: "محصول به‌روزرسانی شد اما آپلود تصویر با مشکل مواجه شد",
             variant: "destructive",
           });
         } finally {
@@ -161,79 +177,54 @@ const AddProductModal = ({
         }
       }
       
-      // Find the category name for display purposes
-      const categoryName = categories.find(cat => cat.id === formData.category)?.name || "Uncategorized";
-      
-      // Add the new product to the UI
-      onAddProduct({
-        ...newProduct,
-        id: newProduct.id,
-        category: categoryName,
+      // Update the product in the UI
+      onUpdateProduct({
+        ...updatedProduct,
+        id: product.id,
+        category: formData.category,
         price: parseFloat(formData.price),
         cost: parseFloat(formData.cost),
         stockLevel: parseInt(formData.stockLevel),
         reorderPoint: parseInt(formData.reorderPoint),
-        supplier: formData.supplier,
-        location: formData.location,
-        lastRestocked: new Date().toLocaleDateString('fa-IR'),
         status:
           parseInt(formData.stockLevel) <= parseInt(formData.reorderPoint)
             ? "low-stock"
             : parseInt(formData.stockLevel) === 0
               ? "out-of-stock"
               : "in-stock",
-        imageUrl: imageUrl || newProduct.image_url,
-        description: formData.description
+        imageUrl: updatedProduct.image_url || formData.imageUrl,
       });
       
       toast({
-        title: "محصول جدید اضافه شد",
-        description: `${formData.name} با موفقیت به انبار اضافه شد`,
+        title: "محصول به‌روزرسانی شد",
+        description: `${formData.name} با موفقیت به‌روزرسانی شد`,
       });
       
-      // Close modal and reset form
+      // Close drawer
       onOpenChange(false);
-      resetForm();
       
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Error updating product:', error);
       toast({
-        title: "خطا در ایجاد محصول",
-        description: "مشکلی در ثبت محصول جدید به وجود آمد",
+        title: "خطا در به‌روزرسانی محصول",
+        description: "مشکلی در به‌روزرسانی محصول به وجود آمد",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      sku: "",
-      category: "",
-      price: "",
-      cost: "",
-      stockLevel: "",
-      reorderPoint: "",
-      supplier: "",
-      location: "",
-      description: "",
-      imageUrl: "",
-    });
-    clearImage();
-  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-[600px] overflow-y-auto">
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>افزودن محصول جدید</DialogTitle>
-            <DialogDescription>
-              اطلاعات محصول جدید را وارد کنید.
-            </DialogDescription>
-          </DialogHeader>
+          <SheetHeader>
+            <SheetTitle>ویرایش محصول</SheetTitle>
+            <SheetDescription>
+              اطلاعات محصول را ویرایش کنید.
+            </SheetDescription>
+          </SheetHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -271,17 +262,11 @@ const AddProductModal = ({
                     <SelectValue placeholder="انتخاب دسته‌بندی" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.length > 0 ? (
-                      categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>
-                        دسته‌بندی موجود نیست
-                      </SelectItem>
-                    )}
+                    <SelectItem value="Beverages">نوشیدنی‌ها</SelectItem>
+                    <SelectItem value="Food">غذاها</SelectItem>
+                    <SelectItem value="Merchandise">کالاها</SelectItem>
+                    <SelectItem value="Equipment">تجهیزات</SelectItem>
+                    <SelectItem value="Stationery">لوازم التحریر</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -372,20 +357,18 @@ const AddProductModal = ({
                         src={imagePreview}
                         alt="پیش‌نمایش محصول"
                         className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "https://via.placeholder.com/150?text=بدون+تصویر";
+                        }}
                       />
                       <button
                         type="button"
                         onClick={clearImage}
                         className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                        disabled={isUploading}
                       >
                         <X className="h-4 w-4" />
                       </button>
-                      {isUploading && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                          <Loader2 className="h-8 w-8 text-white animate-spin" />
-                        </div>
-                      )}
                     </div>
                   </div>
                 ) : (
@@ -395,19 +378,18 @@ const AddProductModal = ({
                       فایل تصویر را آپلود کنید (حداکثر 5MB)
                     </p>
                     <Label
-                      htmlFor="image-upload"
+                      htmlFor="image-upload-edit"
                       className="cursor-pointer bg-primary text-white py-2 px-4 rounded-md flex items-center gap-2 hover:bg-primary/90"
                     >
                       <Upload className="h-4 w-4" />
                       انتخاب فایل
                     </Label>
                     <Input
-                      id="image-upload"
+                      id="image-upload-edit"
                       type="file"
                       accept="image/jpeg,image/png,image/gif,image/webp"
                       className="hidden"
                       onChange={handleImageChange}
-                      disabled={isUploading}
                     />
                   </div>
                 )}
@@ -426,33 +408,30 @@ const AddProductModal = ({
               />
             </div>
           </div>
-          <DialogFooter>
+          <SheetFooter className="mt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                resetForm();
-                onOpenChange(false);
-              }}
-              disabled={isSubmitting || isUploading}
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
             >
               انصراف
             </Button>
             <Button type="submit" disabled={isSubmitting || isUploading}>
-              {isSubmitting || isUploading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isUploading ? "در حال آپلود تصویر..." : "در حال ثبت..."}
+                  در حال ذخیره...
                 </>
               ) : (
-                "افزودن محصول"
+                "ذخیره تغییرات"
               )}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 
-export default AddProductModal;
+export default EditProductDrawer; 

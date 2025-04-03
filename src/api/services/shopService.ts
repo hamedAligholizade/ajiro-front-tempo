@@ -7,6 +7,10 @@ export interface Shop {
   status: string;
   address?: string;
   phone?: string;
+  business_type?: string;
+  tax_enabled?: boolean;
+  tax_rate?: number;
+  currency?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,7 +28,8 @@ export interface ShopUser {
   lastName: string;
   email: string;
   role: string;  // This is the role in the shop (owner, manager, cashier, etc)
-  addedAt: string;
+  isActive: boolean;
+  joinedAt: string;
 }
 
 // Shop API calls
@@ -53,6 +58,12 @@ const shopService = {
     return response.data.data;
   },
   
+  // Get shop details
+  getShopDetails: async (): Promise<Shop> => {
+    const response = await apiClient.get<{ status: string; data: { shop: Shop } }>('/shop');
+    return response.data.data.shop;
+  },
+  
   // Update shop information
   updateShop: async (shopId: string, shopData: {
     name?: string;
@@ -64,9 +75,23 @@ const shopService = {
     return response.data.data;
   },
   
+  // Update shop information
+  updateShopDetails: async (shopData: {
+    name?: string;
+    address?: string;
+    phone?: string;
+    business_type?: string;
+    tax_enabled?: boolean;
+    tax_rate?: number;
+    currency?: string;
+  }): Promise<Shop> => {
+    const response = await apiClient.put<{ status: string; data: { shop: Shop } }>(`/shop`, shopData);
+    return response.data.data.shop;
+  },
+  
   // Get all users of a shop
   getShopUsers: async (shopId: string): Promise<ShopUser[]> => {
-    const response = await apiClient.get<{ success: boolean; data: ShopUser[] }>(`/shops/${shopId}/users`);
+    const response = await apiClient.get<{ status: string; results: number; data: ShopUser[] }>(`/shop/users`);
     return response.data.data;
   },
   
@@ -74,22 +99,40 @@ const shopService = {
   addUserToShop: async (shopId: string, userData: { 
     email: string; 
     role: string;
-    permissions?: string[];
-  }): Promise<{ success: boolean }> => {
-    const response = await apiClient.post<{ success: boolean }>(`/shops/${shopId}/users`, userData);
-    return response.data;
+  }): Promise<{ success: boolean; message: string; data: any }> => {
+    const response = await apiClient.post<{ status: string; message: string; data: any }>(`/shop/users`, userData);
+    return {
+      success: response.data.status === 'success',
+      message: response.data.message,
+      data: response.data.data
+    };
   },
   
   // Remove user from shop
-  removeUserFromShop: async (shopId: string, userId: string): Promise<{ success: boolean }> => {
-    const response = await apiClient.delete<{ success: boolean }>(`/shops/${shopId}/users/${userId}`);
-    return response.data;
+  removeUserFromShop: async (shopId: string, userId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.delete<{ status: string; message: string }>(`/shop/users/${userId}`);
+    return {
+      success: response.data.status === 'success',
+      message: response.data.message
+    };
   },
   
   // Update user role in shop
   updateUserRole: async (shopId: string, userId: string, role: string): Promise<{ success: boolean }> => {
     const response = await apiClient.put<{ success: boolean }>(`/shops/${shopId}/users/${userId}`, { role });
     return response.data;
+  },
+  
+  // Update tax settings
+  updateTaxSettings: async (taxData: {
+    tax_enabled?: boolean;
+    tax_rate?: number;
+  }): Promise<{ tax_enabled: boolean; tax_rate: number }> => {
+    const response = await apiClient.put<{ 
+      status: string; 
+      data: { tax_enabled: boolean; tax_rate: number } 
+    }>('/shop/tax', taxData);
+    return response.data.data;
   }
 };
 

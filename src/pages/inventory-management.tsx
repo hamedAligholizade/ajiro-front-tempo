@@ -36,8 +36,13 @@ import {
 import { t } from "@/lib/i18n";
 import AddProductModal from "@/components/inventory/AddProductModal";
 import AdjustStockModal from "@/components/inventory/AdjustStockModal";
+import productService from "@/api/services/productService";
+import categoryService from "@/api/services/categoryService";
+import { useToast } from "@/components/ui/use-toast";
+import { formatImageUrl } from '../utils/imageUtils';
 
-interface Product {
+// Local UI Product interface
+interface UIProduct {
   id: string;
   name: string;
   sku: string;
@@ -59,139 +64,104 @@ const InventoryManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [showAdjustStockModal, setShowAdjustStockModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [isAdjustStockModalOpen, setIsAdjustStockModalOpen] = useState(false);
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<UIProduct | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiProducts, setApiProducts] = useState<UIProduct[]>([]);
+  const [apiCategories, setApiCategories] = useState<{id: string, name: string}[]>([]);
+  const { toast } = useToast();
 
-  // Sample product data
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: "1",
-      name: "قهوه اسپرسو",
-      sku: "COF001",
-      category: "Beverages",
-      price: 45000,
-      cost: 25000,
-      stockLevel: 120,
-      reorderPoint: 20,
-      supplier: "تامین کننده قهوه ایران",
-      location: "قفسه A1",
-      lastRestocked: "2023-09-01",
-      description: "قهوه اسپرسو با کیفیت عالی",
-      imageUrl:
-        "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=300&q=80",
-      status: "in-stock",
-    },
-    {
-      id: "2",
-      name: "چای سبز",
-      sku: "TEA002",
-      category: "Beverages",
-      price: 35000,
-      cost: 18000,
-      stockLevel: 85,
-      reorderPoint: 15,
-      supplier: "چای مازندران",
-      location: "قفسه A2",
-      lastRestocked: "2023-09-05",
-      imageUrl:
-        "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=300&q=80",
-      status: "in-stock",
-    },
-    {
-      id: "3",
-      name: "ساندویچ مرغ",
-      sku: "FOOD001",
-      category: "Food",
-      price: 85000,
-      cost: 45000,
-      stockLevel: 12,
-      reorderPoint: 10,
-      supplier: "آشپزخانه مرکزی",
-      location: "یخچال B1",
-      lastRestocked: "2023-09-10",
-      imageUrl:
-        "https://images.unsplash.com/photo-1553909489-cd47e0907980?w=300&q=80",
-      status: "low-stock",
-    },
-    {
-      id: "4",
-      name: "سالاد سزار",
-      sku: "FOOD002",
-      category: "Food",
-      price: 75000,
-      cost: 40000,
-      stockLevel: 8,
-      reorderPoint: 5,
-      supplier: "آشپزخانه مرکزی",
-      location: "یخچال B2",
-      lastRestocked: "2023-09-10",
-      status: "low-stock",
-    },
-    {
-      id: "5",
-      name: "دفترچه یادداشت",
-      sku: "STAT001",
-      category: "Stationery",
-      price: 25000,
-      cost: 12000,
-      stockLevel: 45,
-      reorderPoint: 10,
-      supplier: "لوازم التحریر تهران",
-      location: "قفسه C1",
-      lastRestocked: "2023-08-15",
-      status: "in-stock",
-    },
-    {
-      id: "6",
-      name: "خودکار",
-      sku: "STAT002",
-      category: "Stationery",
-      price: 8000,
-      cost: 3000,
-      stockLevel: 200,
-      reorderPoint: 50,
-      supplier: "لوازم التحریر تهران",
-      location: "قفسه C2",
-      lastRestocked: "2023-08-15",
-      status: "in-stock",
-    },
-    {
-      id: "7",
-      name: "بطری آب",
-      sku: "BEV003",
-      category: "Beverages",
-      price: 10000,
-      cost: 5000,
-      stockLevel: 75,
-      reorderPoint: 20,
-      supplier: "آب معدنی دماوند",
-      location: "قفسه A3",
-      lastRestocked: "2023-09-08",
-      status: "in-stock",
-    },
-    {
-      id: "8",
-      name: "کیک شکلاتی",
-      sku: "FOOD003",
-      category: "Food",
-      price: 30000,
-      cost: 15000,
-      stockLevel: 0,
-      reorderPoint: 10,
-      supplier: "شیرینی سرای تهران",
-      location: "یخچال B3",
-      lastRestocked: "2023-09-01",
-      status: "out-of-stock",
-    },
-  ]);
+  // Initialize with empty array instead of sample data
+  const [products, setProducts] = useState<UIProduct[]>([]);
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const fetchedCategories = await categoryService.getCategories();
+      const formattedCategories = fetchedCategories.map(cat => ({
+        id: cat.id.toString(),
+        name: cat.name
+      }));
+      setApiCategories(formattedCategories);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+      toast({
+        title: "خطا در دریافت دسته‌بندی‌ها",
+        description: "لطفاً صفحه را دوباره بارگذاری کنید",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Load products from API
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const productsData = await productService.getProducts();
+      
+      // Transform API products to UI products
+      const transformedProducts = productsData.products.map(product => {
+        // Determine status based on stock levels
+        let stockLevel = 0;
+        let reorderPoint = 0;
+        
+        if (product.inventory) {
+          stockLevel = product.inventory.stock_quantity;
+          reorderPoint = product.inventory.reorder_level || 0;
+        }
+        
+        const status: UIProduct['status'] = 
+          !stockLevel || stockLevel <= 0 
+            ? "out-of-stock" 
+            : stockLevel <= reorderPoint 
+              ? "low-stock" 
+              : "in-stock";
+        
+        return {
+          id: product.id,
+          name: product.name,
+          sku: product.sku,
+          category: product.category?.name || "Uncategorized",
+          category_id: product.category_id,
+          price: product.selling_price,
+          cost: product.purchase_price || 0,
+          stockLevel: stockLevel,
+          reorderPoint: reorderPoint,
+          supplier: "Not Specified",
+          location: product.inventory?.location || "Main Storage",
+          lastRestocked: product.updated_at 
+            ? new Date(product.updated_at).toLocaleDateString('fa-IR') 
+            : "Unknown",
+          description: product.description,
+          imageUrl: product.image_url,
+          status
+        };
+      });
+      
+      setApiProducts(transformedProducts);
+      setProducts(transformedProducts);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      toast({
+        title: "خطا در بارگذاری",
+        description: "بارگذاری محصولات با مشکل مواجه شد",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
 
   // Get unique categories from products
-  const categories = [
-    "all",
-    ...new Set(products.map((product) => product.category)),
-  ];
+  const uniqueProductCategories = ["all", ...new Set(products.map((product) => product.category))];
 
   // Filter and sort products
   const filteredProducts = products
@@ -233,58 +203,137 @@ const InventoryManagement = () => {
       }
     });
 
-  const handleAddProduct = (newProduct: Product) => {
-    setProducts([...products, newProduct]);
+  const handleAddProduct = (newProduct: UIProduct) => {
+    setProducts((prevProducts) => [...prevProducts, newProduct]);
+    // Refresh products list from API to get complete data
+    fetchProducts();
   };
 
-  const handleAdjustStock = (
+  const handleAdjustStock = async (
     productId: string,
     newStockLevel: number,
     reason: string,
   ) => {
-    setProducts(
-      products.map((product) => {
-        if (product.id === productId) {
-          const status =
-            newStockLevel <= 0
-              ? "out-of-stock"
-              : newStockLevel <= product.reorderPoint
-                ? "low-stock"
-                : "in-stock";
-          return { ...product, stockLevel: newStockLevel, status };
-        }
-        return product;
-      }),
-    );
-  };
-
-  const handleDeleteProduct = (productId: string) => {
-    if (confirm("آیا از حذف این محصول اطمینان دارید؟")) {
-      setProducts(products.filter((product) => product.id !== productId));
+    try {
+      // Calculate the difference
+      const currentProduct = products.find((p) => p.id === productId);
+      if (!currentProduct) return;
+      
+      const adjustment = newStockLevel - currentProduct.stockLevel;
+      
+      // Call API to adjust stock
+      await productService.adjustStock(productId, adjustment, reason);
+      
+      // Update local state
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product.id === productId
+            ? {
+                ...product,
+                stockLevel: newStockLevel,
+                status:
+                  newStockLevel <= product.reorderPoint
+                    ? "low-stock"
+                    : newStockLevel === 0
+                      ? "out-of-stock"
+                      : "in-stock",
+                lastRestocked: new Date().toLocaleDateString('fa-IR'),
+              }
+            : product,
+        ),
+      );
+      
+      toast({
+        title: "موجودی به‌روزرسانی شد",
+        description: `تغییر موجودی محصول ${currentProduct.name} با موفقیت انجام شد`,
+      });
+      
+      // Refresh products list from API
+      fetchProducts();
+    } catch (error) {
+      console.error("Error adjusting stock:", error);
+      toast({
+        title: "خطا در تغییر موجودی",
+        description: "عملیات با مشکل مواجه شد",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleQuickStockAdjust = (productId: string, increment: boolean) => {
-    setProducts(
-      products.map((product) => {
-        if (product.id === productId) {
-          const newStockLevel = increment
-            ? product.stockLevel + 1
-            : Math.max(0, product.stockLevel - 1);
-          const status =
-            newStockLevel <= 0
-              ? "out-of-stock"
-              : newStockLevel <= product.reorderPoint
-                ? "low-stock"
-                : "in-stock";
-          return { ...product, stockLevel: newStockLevel, status };
-        }
-        return product;
-      }),
+  const handleUpdateProduct = (updatedProduct: UIProduct) => {
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.id === updatedProduct.id ? updatedProduct : product,
+      ),
     );
+    // Refresh products list from API
+    fetchProducts();
   };
 
-  const getStatusBadge = (status: Product["status"]) => {
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await productService.deleteProduct(productId);
+      
+      // Update local state
+      setProducts((prevProducts) =>
+        prevProducts.filter((product) => product.id !== productId),
+      );
+      
+      toast({
+        title: "محصول حذف شد",
+        description: "محصول با موفقیت از سیستم حذف شد",
+      });
+      
+      // Refresh products list from API
+      fetchProducts();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast({
+        title: "خطا در حذف محصول",
+        description: "عملیات با مشکل مواجه شد",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleQuickStockAdjust = async (productId: string, increment: boolean) => {
+    try {
+      // Get the product from either API or sample data
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+      
+      const newStockLevel = increment
+        ? product.stockLevel + 1
+        : Math.max(0, product.stockLevel - 1);
+      
+      // Call API to update inventory
+      await productService.adjustStock(
+        productId, 
+        increment ? 1 : -1, 
+        increment ? "Quick increment" : "Quick decrement"
+      );
+      
+      // Update the API products state
+      setApiProducts(
+        apiProducts.map((p) => {
+          if (p.id === productId) {
+            const status: UIProduct['status'] =
+              newStockLevel <= 0
+                ? "out-of-stock"
+                : newStockLevel <= p.reorderPoint
+                  ? "low-stock"
+                  : "in-stock";
+            return { ...p, stockLevel: newStockLevel, status };
+          }
+          return p;
+        })
+      );
+    } catch (error) {
+      console.error("Failed to adjust stock:", error);
+    }
+  };
+
+  const getStatusBadge = (status: UIProduct["status"]) => {
     const statusClasses = {
       "in-stock": "bg-green-100 text-green-800",
       "low-stock": "bg-amber-100 text-amber-800",
@@ -381,13 +430,22 @@ const InventoryManagement = () => {
                     <SelectValue placeholder={t("inventory.allCategories")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category === "all"
-                          ? t("inventory.allCategories")
-                          : category}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">{t("inventory.allCategories")}</SelectItem>
+                    {apiCategories.length > 0 ? (
+                      apiCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      uniqueProductCategories
+                        .filter(cat => cat !== "all")
+                        .map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))
+                    )}
                   </SelectContent>
                 </Select>
                 <div className="flex items-center gap-1">
@@ -413,7 +471,7 @@ const InventoryManagement = () => {
                   </Button>
                 </div>
               </div>
-              <Button onClick={() => setShowAddProductModal(true)}>
+              <Button onClick={() => setIsAddProductModalOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" /> {t("inventory.addProduct")}
               </Button>
             </div>
@@ -452,15 +510,10 @@ const InventoryManagement = () => {
                                 <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
                                   <img
                                     src={
-                                      product.imageUrl ||
-                                      "https://via.placeholder.com/150?text=بدون+تصویر"
+                                      product.imageUrl
                                     }
                                     alt={product.name}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src =
-                                        "https://via.placeholder.com/150?text=بدون+تصویر";
-                                    }}
                                   />
                                 </div>
                                 <div>
@@ -509,7 +562,7 @@ const InventoryManagement = () => {
                                   size="icon"
                                   onClick={() => {
                                     setSelectedProduct(product);
-                                    setShowAdjustStockModal(true);
+                                    setIsAdjustStockModalOpen(true);
                                   }}
                                   title={t("inventory.adjustStock")}
                                 >
@@ -683,7 +736,7 @@ const InventoryManagement = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {categories
+                    {uniqueProductCategories
                       .filter((category) => category !== "all")
                       .map((category) => {
                         const count = products.filter(
@@ -742,7 +795,7 @@ const InventoryManagement = () => {
                               size="sm"
                               onClick={() => {
                                 setSelectedProduct(product);
-                                setShowAdjustStockModal(true);
+                                setIsAdjustStockModalOpen(true);
                               }}
                             >
                               {t("inventory.orderMore")}
@@ -779,15 +832,16 @@ const InventoryManagement = () => {
 
       {/* Add Product Modal */}
       <AddProductModal
-        open={showAddProductModal}
-        onOpenChange={setShowAddProductModal}
+        open={isAddProductModalOpen}
+        onOpenChange={setIsAddProductModalOpen}
         onAddProduct={handleAddProduct}
+        categories={apiCategories}
       />
 
       {/* Adjust Stock Modal */}
       <AdjustStockModal
-        open={showAdjustStockModal}
-        onOpenChange={setShowAdjustStockModal}
+        open={isAdjustStockModalOpen}
+        onOpenChange={setIsAdjustStockModalOpen}
         product={selectedProduct}
         onAdjustStock={handleAdjustStock}
       />
