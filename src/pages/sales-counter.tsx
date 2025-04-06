@@ -41,6 +41,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import productService, { Product as ApiProduct } from "@/api/services/productService";
+import categoryService, { Category } from "@/api/services/categoryService";
+import { formatImageUrl } from "@/utils/imageUtils";
+import orderService, { CreateOrderData } from "@/api/services/orderService";
+import customerService, { Customer as ApiCustomer } from "@/api/services/customerService";
+import { toast } from "@/components/ui/use-toast";
 
 interface Product {
   id: string;
@@ -61,7 +67,7 @@ interface Customer {
   name: string;
   phone: string;
   loyaltyPoints: number;
-  loyaltyTier: "bronze" | "silver" | "gold";
+  loyaltyTier: "bronze" | "silver" | "gold" | "platinum";
 }
 
 interface Discount {
@@ -87,82 +93,55 @@ const SalesCounter = () => {
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "card" | "mobile"
   >("cash");
+  
+  // State for products and categories from API
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sample product data
-  const products: Product[] = [
-    {
-      id: "1",
-      name: "Coffee",
-      price: 3.5,
-      category: "Beverages",
-      stock: 50,
-      imageUrl:
-        "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=300&q=80",
-    },
-    {
-      id: "2",
-      name: "Tea",
-      price: 2.5,
-      category: "Beverages",
-      stock: 45,
-      imageUrl:
-        "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=300&q=80",
-    },
-    {
-      id: "3",
-      name: "Sandwich",
-      price: 5.99,
-      category: "Food",
-      stock: 15,
-      imageUrl:
-        "https://images.unsplash.com/photo-1553909489-cd47e0907980?w=300&q=80",
-    },
-    {
-      id: "4",
-      name: "Salad",
-      price: 6.99,
-      category: "Food",
-      stock: 10,
-      imageUrl:
-        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80",
-    },
-    {
-      id: "5",
-      name: "Notebook",
-      price: 4.99,
-      category: "Stationery",
-      stock: 30,
-      imageUrl:
-        "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=300&q=80",
-    },
-    {
-      id: "6",
-      name: "Pen",
-      price: 1.99,
-      category: "Stationery",
-      stock: 100,
-      imageUrl:
-        "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=300&q=80",
-    },
-    {
-      id: "7",
-      name: "Water Bottle",
-      price: 2.99,
-      category: "Beverages",
-      stock: 40,
-      imageUrl:
-        "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=300&q=80",
-    },
-    {
-      id: "8",
-      name: "Muffin",
-      price: 3.99,
-      category: "Food",
-      stock: 25,
-      imageUrl:
-        "https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=300&q=80",
-    },
-  ];
+  // Fetch products and categories from the API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch categories
+        const categoriesData = await categoryService.getCategories();
+        
+        // Fetch products
+        const productsResponse = await productService.getProducts();
+        
+        // Transform API products to the format expected by the component
+        const transformedProducts = productsResponse.products.map((apiProduct: ApiProduct) => ({
+          id: apiProduct.id,
+          name: apiProduct.name,
+          price: typeof apiProduct.selling_price === 'number' 
+            ? apiProduct.selling_price 
+            : (apiProduct.selling_price ? parseFloat(apiProduct.selling_price) : 0),
+          category: apiProduct.category?.name || 'Uncategorized',
+          stock: apiProduct.inventory?.stock_quantity || 0,
+          imageUrl: apiProduct.image_url
+        }));
+        
+        setProducts(transformedProducts);
+        setCategories([...new Set(transformedProducts.map(product => product.category))]);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load products and categories');
+        setIsLoading(false);
+        toast({
+          title: "Error loading data",
+          description: "There was a problem loading products and categories",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   // Sample discount data
   const discounts: Discount[] = [
@@ -178,32 +157,42 @@ const SalesCounter = () => {
     },
   ];
 
-  // Sample customer data
-  const customers: Customer[] = [
-    {
-      id: "1",
-      name: "John Doe",
-      phone: "555-1234",
-      loyaltyPoints: 120,
-      loyaltyTier: "silver",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      phone: "555-5678",
-      loyaltyPoints: 350,
-      loyaltyTier: "gold",
-    },
-    {
-      id: "3",
-      name: "Bob Johnson",
-      phone: "555-9012",
-      loyaltyPoints: 50,
-      loyaltyTier: "bronze",
-    },
-  ];
+  // State for customers from API
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [newCustomerData, setNewCustomerData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
 
-  const categories = [...new Set(products.map((product) => product.category))];
+  // Fetch customers from API
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const response = await customerService.getCustomers();
+        const transformedCustomers = response.customers.map(
+          (apiCustomer: ApiCustomer) => ({
+            id: apiCustomer.id,
+            name: `${apiCustomer.first_name} ${apiCustomer.last_name}`,
+            phone: apiCustomer.phone || "",
+            loyaltyPoints: apiCustomer.loyalty_points,
+            loyaltyTier: apiCustomer.loyalty_tier,
+          })
+        );
+        setCustomers(transformedCustomers);
+      } catch (err) {
+        console.error("Error fetching customers:", err);
+        toast({
+          title: "Error loading customers",
+          description: "There was a problem loading customers",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchCustomers();
+  }, []);
 
   const filteredProducts = searchTerm
     ? products.filter((product) =>
@@ -366,26 +355,74 @@ const SalesCounter = () => {
     console.log("Receipt generated:", receipt);
   };
 
-  const handleCheckout = () => {
-    if (cart.length === 0) return;
+  const handleCheckout = async () => {
+    if (cart.length === 0) {
+      return;
+    }
 
-    // Process payment
-    console.log(
-      `Processing ${paymentMethod} payment for ${calculateTotal().toFixed(2)}`,
-    );
+    try {
+      // Format the order data for the API
+      const orderData: CreateOrderData = {
+        payment_method: paymentMethod,
+        customer_id: selectedCustomer?.id,
+        items: cart.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          price: item.price,
+          discount: item.discountPercent ? (item.price * item.quantity * item.discountPercent / 100) : undefined,
+        })),
+        discount_total: calculateDiscount() + calculateLoyaltyDiscount(),
+        notes: "Created from sales counter"
+      };
 
-    // Update inventory
-    updateInventory();
+      // Send the order to the API
+      const order = await orderService.createOrder(orderData);
+      
+      // Generate receipt data for display
+      setReceiptData({
+        id: order.id,
+        reference: order.reference_number,
+        date: new Date(order.order_date).toLocaleString(),
+        customer: selectedCustomer
+          ? `${selectedCustomer.name} (${selectedCustomer.phone})`
+          : "Guest",
+        items: cart.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity,
+          discount: item.discountPercent
+            ? (item.price * item.quantity * item.discountPercent) / 100
+            : 0,
+        })),
+        subtotal: calculateSubtotal(),
+        discount: calculateDiscount(),
+        loyaltyDiscount: calculateLoyaltyDiscount(),
+        tax: calculateTax(),
+        total: calculateTotal(),
+        paymentMethod,
+      });
 
-    // Generate receipt
-    generateReceipt();
+      // Show receipt dialog
+      setShowReceiptDialog(true);
 
-    // Update loyalty points if customer selected
-    if (selectedCustomer) {
-      const pointsEarned = Math.floor(calculateTotal());
-      console.log(
-        `${selectedCustomer.name} earned ${pointsEarned} loyalty points`,
-      );
+      // Clear cart after successful checkout
+      clearCart();
+      setAppliedDiscount(null);
+      setSelectedCustomer(null);
+      
+      toast({
+        title: "Order completed",
+        description: "The order has been successfully processed",
+        variant: "default",
+      });
+    } catch (err) {
+      console.error("Error creating order:", err);
+      toast({
+        title: "Checkout failed",
+        description: "There was a problem processing your order",
+        variant: "destructive",
+      });
     }
   };
 
@@ -514,8 +551,6 @@ const SalesCounter = () => {
     }
   };
 
-  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
-
   const filteredCustomers = customerSearchTerm
     ? customers.filter(
         (customer) =>
@@ -532,12 +567,86 @@ const SalesCounter = () => {
     setCustomerSearchTerm("");
   };
 
-  const registerNewCustomer = () => {
-    // In a real app, this would open a form to register a new customer
-    alert("This would open a form to register a new customer");
-    // For demo purposes, we'll just close the dialog
-    setShowLoyaltyDialog(false);
+  // Register a new customer
+  const registerNewCustomer = async () => {
+    try {
+      if (!newCustomerData.firstName || !newCustomerData.lastName) {
+        toast({
+          title: t("missing_information"),
+          description: t("enter_name_required"),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const customerData = {
+        first_name: newCustomerData.firstName,
+        last_name: newCustomerData.lastName,
+        phone: newCustomerData.phone,
+      };
+
+      const newApiCustomer = await customerService.createCustomer(customerData);
+
+      // Transform and add to customers list
+      const newCustomer = {
+        id: newApiCustomer.id,
+        name: `${newApiCustomer.first_name} ${newApiCustomer.last_name}`,
+        phone: newApiCustomer.phone || "",
+        loyaltyPoints: newApiCustomer.loyalty_points,
+        loyaltyTier: newApiCustomer.loyalty_tier,
+      };
+
+      setCustomers([...customers, newCustomer]);
+      setSelectedCustomer(newCustomer);
+      setShowLoyaltyDialog(false);
+
+      toast({
+        title: t("customer_created"),
+        description: t("customer_added_successfully"),
+        variant: "default",
+      });
+
+      // Reset form
+      setNewCustomerData({
+        firstName: "",
+        lastName: "",
+        phone: "",
+      });
+    } catch (err) {
+      console.error("Error creating customer:", err);
+      toast({
+        title: t("error_creating_customer"),
+        description: t("problem_adding_customer"),
+        variant: "destructive",
+      });
+    }
   };
+
+  // Show loading state when fetching data
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-lg">{t('loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if there was a problem
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-lg text-red-500">{error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            {t('try_again')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -596,10 +705,6 @@ const SalesCounter = () => {
                                       src={product.imageUrl}
                                       alt={product.name}
                                       className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).src =
-                                          "https://via.placeholder.com/150?text=بدون+تصویر";
-                                      }}
                                     />
                                   ) : (
                                     <div className="rounded-full bg-primary/10 p-2 w-full h-full flex items-center justify-center">
@@ -609,10 +714,10 @@ const SalesCounter = () => {
                                 </div>
                                 <h3 className="font-medium">{product.name}</h3>
                                 <p className="text-primary font-bold">
-                                  ${product.price.toFixed(2)}
+                                  {typeof product.price === 'number' ? `تومان ${product.price.toFixed(0)} ` : '۰ تومان'}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Stock: {product.stock}
+                                  {t("stock")}: {product.stock}
                                 </p>
                               </CardContent>
                             </Card>
@@ -644,68 +749,130 @@ const SalesCounter = () => {
                           : "Select Customer"}
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="min-w-[350px] sm:max-w-[500px]">
                       <DialogHeader>
-                        <DialogTitle>Select Customer</DialogTitle>
+                        <DialogTitle>{t("select_or_create_customer")}</DialogTitle>
                         <DialogDescription>
-                          Select an existing customer or register a new one to
-                          apply loyalty benefits.
+                          {t("loyalty_program_description")}
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="relative">
-                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="جستجو بر اساس نام یا شماره تلفن..."
-                            value={customerSearchTerm}
-                            onChange={(e) =>
-                              setCustomerSearchTerm(e.target.value)
-                            }
-                            className="pl-8 mb-4"
-                          />
-                        </div>
 
-                        {filteredCustomers.length > 0 ? (
-                          filteredCustomers.map((customer) => (
-                            <Card
-                              key={customer.id}
-                              className="cursor-pointer hover:bg-gray-50"
-                              onClick={() => selectCustomer(customer)}
-                            >
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-center">
+                      <div className="py-4">
+                        <div className="flex flex-col gap-4">
+                          <Input
+                            placeholder={t("search_customers")}
+                            value={customerSearchTerm}
+                            onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                            className="mb-2"
+                          />
+
+                          {/* Customer List */}
+                          <div className="max-h-[300px] overflow-y-auto rounded-md border">
+                            {filteredCustomers.length > 0 ? (
+                              filteredCustomers.map((customer) => (
+                                <div
+                                  key={customer.id}
+                                  className="flex cursor-pointer items-center justify-between border-b px-4 py-2 last:border-b-0 hover:bg-secondary"
+                                  onClick={() => selectCustomer(customer)}
+                                >
                                   <div>
-                                    <h3 className="font-medium">
-                                      {customer.name}
-                                    </h3>
+                                    <p className="font-medium">{customer.name}</p>
                                     <p className="text-sm text-muted-foreground">
                                       {customer.phone}
                                     </p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="text-sm font-medium">
-                                      {customer.loyaltyPoints} points
-                                    </p>
-                                    <p className="text-xs text-muted-foreground capitalize">
-                                      {customer.loyaltyTier} tier
-                                    </p>
+                                    <div className="font-medium">
+                                      {customer.loyaltyPoints} {t("points")}
+                                    </div>
+                                    <div
+                                      className={`text-sm ${
+                                        customer.loyaltyTier === "gold"
+                                          ? "text-amber-500"
+                                          : customer.loyaltyTier === "silver"
+                                          ? "text-zinc-400"
+                                          : "text-amber-700"
+                                      }`}
+                                    >
+                                      {t(`tier_${customer.loyaltyTier}`)}
+                                    </div>
                                   </div>
                                 </div>
-                              </CardContent>
-                            </Card>
-                          ))
-                        ) : (
-                          <div className="text-center py-4 text-muted-foreground">
-                            مشتری یافت نشد
+                              ))
+                            ) : customerSearchTerm ? (
+                              <div className="p-4 text-center text-muted-foreground">
+                                {t("no_customers_found")}
+                              </div>
+                            ) : (
+                              <div className="p-4 text-center text-muted-foreground">
+                                {t("search_or_create_customer")}
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <Button
-                          className="w-full"
-                          onClick={registerNewCustomer}
-                        >
-                          Register New Customer
-                        </Button>
+
+                          {/* New Customer Form */}
+                          <div className="mt-4 rounded-md border p-4">
+                            <h3 className="mb-3 font-medium">
+                              {t("add_new_customer")}
+                            </h3>
+                            <div className="grid gap-3">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <Label htmlFor="firstName">{t("first_name")}</Label>
+                                  <Input
+                                    id="firstName"
+                                    value={newCustomerData.firstName}
+                                    onChange={(e) =>
+                                      setNewCustomerData({
+                                        ...newCustomerData,
+                                        firstName: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor="lastName">{t("last_name")}</Label>
+                                  <Input
+                                    id="lastName"
+                                    value={newCustomerData.lastName}
+                                    onChange={(e) =>
+                                      setNewCustomerData({
+                                        ...newCustomerData,
+                                        lastName: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor="phone">{t("phone")}</Label>
+                                <Input
+                                  id="phone"
+                                  value={newCustomerData.phone}
+                                  onChange={(e) =>
+                                    setNewCustomerData({
+                                      ...newCustomerData,
+                                      phone: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <Button
+                              className="mt-3 w-full"
+                              onClick={registerNewCustomer}
+                            >
+                              {t("add_customer")}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
+
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowLoyaltyDialog(false)}>
+                          {t("cancel")}
+                        </Button>
+                      </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -765,18 +932,16 @@ const SalesCounter = () => {
                           key={item.id}
                           className="flex justify-between items-center p-2 border rounded-md"
                         >
-                          <div>
-                            <h4 className="font-medium">{item.name}</h4>
-                            <div className="flex items-center space-x-2">
-                              <p className="text-sm text-muted-foreground">
-                                ${item.price.toFixed(2)} each
-                              </p>
-                              {item.discountPercent && (
-                                <span className="text-xs bg-green-100 text-green-800 px-1 rounded">
-                                  {item.discountPercent}% off
-                                </span>
-                              )}
-                            </div>
+                          <div className="flex flex-col">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {typeof item.price === 'number' ? `${item.price.toFixed(0)} تومان` : '۰ تومان'} {t("each")}
+                            </p>
+                            {item.discountPercent && (
+                              <span className="text-xs bg-green-100 text-green-800 px-1 rounded">
+                                {item.discountPercent}% {t("off")}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center space-x-2">
                             <Button
@@ -921,34 +1086,33 @@ const SalesCounter = () => {
                   {cart.length > 0 && (
                     <div className="pt-4 border-t space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Subtotal:</span>
-                        <span>${calculateSubtotal().toFixed(2)}</span>
+                        <span>{t("subtotal")}:</span>
+                        <span>{calculateSubtotal().toFixed(0)} تومان</span>
                       </div>
 
                       {appliedDiscount && (
                         <div className="flex justify-between text-sm text-green-600">
-                          <span>Discount:</span>
-                          <span>-${calculateDiscount().toFixed(2)}</span>
+                          <span>{t("discount")}:</span>
+                          <span>-{calculateDiscount().toFixed(0)} تومان</span>
                         </div>
                       )}
 
                       {selectedCustomer && calculateLoyaltyDiscount() > 0 && (
                         <div className="flex justify-between text-sm text-blue-600">
                           <span>
-                            Loyalty Discount ({selectedCustomer.loyaltyTier}):
-                          </span>
-                          <span>-${calculateLoyaltyDiscount().toFixed(2)}</span>
+                            {t("loyaltyDiscount")} ({t(`tier_${selectedCustomer.loyaltyTier}`)}):</span>
+                          <span>-{calculateLoyaltyDiscount().toFixed(0)} تومان</span>
                         </div>
                       )}
 
                       <div className="flex justify-between text-sm">
-                        <span>Tax (8%):</span>
-                        <span>${calculateTax().toFixed(2)}</span>
+                        <span>{t("tax")} (8%):</span>
+                        <span>{calculateTax().toFixed(0)} تومان</span>
                       </div>
 
                       <div className="flex justify-between text-lg font-bold pt-2 border-t mt-2">
                         <span>{t("salesCounter.total")}:</span>
-                        <span>${calculateTotal().toFixed(2)}</span>
+                        <span>{calculateTotal().toFixed(0)} تومان</span>
                       </div>
                     </div>
                   )}
@@ -1053,12 +1217,11 @@ const SalesCounter = () => {
                         </span>
                         {item.discountPercent && (
                           <span className="text-xs text-green-600 ml-2">
-                            ({item.discountPercent}% off)
+                            ({item.discountPercent}% {t("off")})
                           </span>
                         )}
                       </div>
                       <span>
-                        $
                         {(
                           item.price * item.quantity -
                           (item.discountPercent
@@ -1067,7 +1230,7 @@ const SalesCounter = () => {
                                 item.discountPercent) /
                               100
                             : 0)
-                        ).toFixed(2)}
+                        ).toFixed(0)} تومان
                       </span>
                     </div>
                   ))}
@@ -1076,32 +1239,32 @@ const SalesCounter = () => {
 
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>${receiptData.subtotal.toFixed(2)}</span>
+                  <span>{t("subtotal")}:</span>
+                  <span>{receiptData.subtotal.toFixed(0)} تومان</span>
                 </div>
 
                 {receiptData.discount > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Discount:</span>
-                    <span>-${receiptData.discount.toFixed(2)}</span>
+                    <span>{t("discount")}:</span>
+                    <span>-{receiptData.discount.toFixed(0)} تومان</span>
                   </div>
                 )}
 
                 {receiptData.loyaltyDiscount > 0 && (
                   <div className="flex justify-between text-blue-600">
-                    <span>Loyalty Discount:</span>
-                    <span>-${receiptData.loyaltyDiscount.toFixed(2)}</span>
+                    <span>{t("loyaltyDiscount")}:</span>
+                    <span>-{receiptData.loyaltyDiscount.toFixed(0)} تومان</span>
                   </div>
                 )}
 
                 <div className="flex justify-between">
-                  <span>Tax:</span>
-                  <span>${receiptData.tax.toFixed(2)}</span>
+                  <span>{t("tax")}:</span>
+                  <span>{receiptData.tax.toFixed(0)} تومان</span>
                 </div>
 
                 <div className="flex justify-between font-bold text-lg pt-2 border-t mt-2">
-                  <span>Total:</span>
-                  <span>${receiptData.total.toFixed(2)}</span>
+                  <span>{t("salesCounter.total")}:</span>
+                  <span>{receiptData.total.toFixed(0)} تومان</span>
                 </div>
               </div>
 

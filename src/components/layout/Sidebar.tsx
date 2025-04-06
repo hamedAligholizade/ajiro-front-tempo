@@ -16,6 +16,7 @@ import {
   Store,
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hooks";
+import ShopSelector from "../shop/ShopSelector";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -150,12 +151,9 @@ const Sidebar = () => {
         {/* Overlay for mobile */}
         <div className="p-6">
           <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
-          {shop && (
-            <div className="flex items-center gap-2 mt-2 text-primary">
-              <Store className="h-4 w-4" />
-              <span className="text-sm font-medium">{shop.name}</span>
-            </div>
-          )}
+          <div className="mt-2">
+            <ShopSelector />
+          </div>
         </div>
         <nav className="flex-1 overflow-y-auto p-4">
           <ul className="space-y-2">

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getStoredAccessToken, clearTokens } from '../utils/tokenStorage';
+import { getCurrentShopId } from '../../utils/shopContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -19,6 +20,38 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add shop_id to all requests
+    const shopId = getCurrentShopId();
+    if (shopId) {
+      // For GET requests, add shop_id as a query parameter if not already present
+      if (config.method?.toLowerCase() === 'get') {
+        config.params = config.params || {};
+        if (!config.params.shop_id) {
+          config.params.shop_id = shopId;
+        }
+      }
+      // For POST, PUT, PATCH requests, add shop_id to request body
+      else if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
+        // Handle FormData objects
+        if (config.data instanceof FormData) {
+          if (!config.data.has('shop_id')) {
+            config.data.append('shop_id', shopId);
+          }
+        } 
+        // Handle JSON data
+        else if (config.data && typeof config.data === 'object') {
+          if (!config.data.shop_id) {
+            config.data.shop_id = shopId;
+          }
+        }
+        // Handle empty requests - create a data object with shop_id
+        else if (!config.data) {
+          config.data = { shop_id: shopId };
+        }
+      }
+    }
+    
     return config;
   },
   (error) => {

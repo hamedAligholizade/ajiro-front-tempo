@@ -237,6 +237,23 @@ export type Translation = {
     filter: string;
     dateRange: string;
   };
+  subtotal: string;
+  discount: string;
+  loyaltyDiscount: string;
+  tax: string;
+  each: string;
+  off: string;
+  stock: string;
+  missing_information: string;
+  enter_name_required: string;
+  customer_created: string;
+  customer_added_successfully: string;
+  error_creating_customer: string;
+  problem_adding_customer: string;
+  tier_bronze: string;
+  tier_silver: string;
+  tier_gold: string;
+  tier_platinum: string;
 };
 
 const en: Translation = {
@@ -266,15 +283,15 @@ const en: Translation = {
   },
   salesCounter: {
     title: "Sales Counter",
-    subtitle: "Process transactions and checkout",
+    subtitle: "Process sales and manage transactions",
     productCatalog: "Product Catalog",
     searchProducts: "Search products...",
     shoppingCart: "Shopping Cart",
-    clear: "Clear",
-    cartEmpty: "Cart is empty",
-    total: "Total:",
+    cartEmpty: "Your cart is empty",
     checkout: "Checkout",
     printReceipt: "Print Receipt",
+    clear: "Clear",
+    total: "Total",
   },
   reports: {
     title: "Reports Dashboard",
@@ -478,6 +495,23 @@ const en: Translation = {
     filter: "Filter",
     dateRange: "Date Range",
   },
+  subtotal: "Subtotal",
+  discount: "Discount",
+  loyaltyDiscount: "Loyalty Discount",
+  tax: "Tax",
+  each: "each",
+  off: "off",
+  stock: "Stock",
+  missing_information: "Missing information",
+  enter_name_required: "Please enter at least first and last name",
+  customer_created: "Customer created",
+  customer_added_successfully: "{{name}} has been added successfully",
+  error_creating_customer: "Error creating customer",
+  problem_adding_customer: "There was a problem adding the new customer",
+  tier_bronze: "Bronze",
+  tier_silver: "Silver",
+  tier_gold: "Gold",
+  tier_platinum: "Platinum",
 };
 
 const fa: Translation = {
@@ -507,15 +541,15 @@ const fa: Translation = {
   },
   salesCounter: {
     title: "صندوق فروش",
-    subtitle: "پردازش تراکنش‌ها و تسویه حساب",
+    subtitle: "پردازش فروش و مدیریت تراکنش‌ها",
     productCatalog: "کاتالوگ محصولات",
     searchProducts: "جستجوی محصولات...",
     shoppingCart: "سبد خرید",
-    clear: "پاک کردن",
-    cartEmpty: "سبد خرید خالی است",
-    total: "مجموع:",
-    checkout: "پرداخت",
+    cartEmpty: "سبد خرید شما خالی است",
+    checkout: "تسویه حساب",
     printReceipt: "چاپ رسید",
+    clear: "پاک کردن",
+    total: "جمع کل",
   },
   reports: {
     title: "داشبورد گزارش‌ها",
@@ -718,6 +752,23 @@ const fa: Translation = {
     filter: "فیلتر",
     dateRange: "بازه زمانی",
   },
+  subtotal: "جمع جزء",
+  discount: "تخفیف",
+  loyaltyDiscount: "تخفیف وفاداری",
+  tax: "مالیات",
+  each: "هر کدام",
+  off: "تخفیف",
+  stock: "موجودی",
+  missing_information: "اطلاعات ناقص",
+  enter_name_required: "لطفاً حداقل نام و نام خانوادگی را وارد کنید",
+  customer_created: "مشتری ایجاد شد",
+  customer_added_successfully: "{{name}} با موفقیت اضافه شد",
+  error_creating_customer: "خطا در ایجاد مشتری",
+  problem_adding_customer: "مشکلی در افزودن مشتری جدید وجود داشت",
+  tier_bronze: "برنزی",
+  tier_silver: "نقره‌ای",
+  tier_gold: "طلایی",
+  tier_platinum: "پلاتینیوم",
 };
 
 export const translations: Record<Locale, Translation> = {
