@@ -1,4 +1,5 @@
 import apiClient from '../client/axios';
+import { getCurrentShopId as getShopIdFromUtils } from '@/utils/shop';
 
 // Types
 export interface Shop {
@@ -133,6 +134,23 @@ const shopService = {
       data: { tax_enabled: boolean; tax_rate: number } 
     }>('/shop/tax', taxData);
     return response.data.data;
+  },
+
+  /**
+   * Get the currently active shop ID
+   * @returns The active shop ID from local storage or a default value
+   */
+  getCurrentShopId(): string {
+    // Use the utility function for getting the shop ID
+    const shopId = getShopIdFromUtils();
+    
+    // If not found, return a default ID
+    if (!shopId) {
+      // This is a fallback value - in a real app, you'd handle this better
+      return '1'; // Default shop ID 
+    }
+    
+    return shopId;
   }
 };
 

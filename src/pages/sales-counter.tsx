@@ -47,6 +47,8 @@ import { formatImageUrl } from "@/utils/imageUtils";
 import orderService, { CreateOrderData } from "@/api/services/orderService";
 import customerService, { Customer as ApiCustomer } from "@/api/services/customerService";
 import { toast } from "@/components/ui/use-toast";
+import shopService from "@/api/services/shopService";
+import { getShopIdWithDefault } from "@/utils/shopContext";
 
 interface Product {
   id: string;
@@ -355,16 +357,89 @@ const SalesCounter = () => {
     console.log("Receipt generated:", receipt);
   };
 
+  // Filter customers based on search term, prioritizing phone number matches
+  const filteredCustomers = customerSearchTerm
+    ? customers.filter(
+        (customer) =>
+          // Prioritize exact phone matches first
+          customer.phone.includes(customerSearchTerm) ||
+          customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase())
+      )
+    : [];
+    
+  // Add a state to track if we need to show new customer form
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  
+  // Customer search with phone number focus
+  const handleCustomerPhoneSearch = async () => {
+    // If phone is empty, show error
+    if (!customerSearchTerm) {
+      toast({
+        title: t("missing_information"),
+        description: t("enter_phone_required"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Try to find customer by phone
+      const response = await customerService.getCustomerByPhone(customerSearchTerm);
+      
+      if (response && response.id) {
+        // Transform and select the customer
+        const customer = {
+          id: response.id,
+          name: `${response.first_name} ${response.last_name}`,
+          phone: response.phone || "",
+          loyaltyPoints: response.loyalty_points,
+          loyaltyTier: response.loyalty_tier,
+        };
+        
+        selectCustomer(customer);
+        // Hide new customer form as we found an existing customer
+        setShowNewCustomerForm(false);
+        
+        toast({
+          title: t("customer_found"),
+          description: t("customer_loaded_successfully"),
+          variant: "default",
+        });
+      } else {
+        // No customer found - pre-fill the phone field for new customer form
+        setNewCustomerData({
+          ...newCustomerData,
+          phone: customerSearchTerm,
+        });
+        
+        // Show the new customer form fields
+        setShowNewCustomerForm(true);
+        
+        toast({
+          title: t("customer_not_found"),
+          description: t("create_new_customer_with_phone"),
+          variant: "default",
+        });
+      }
+    } catch (err) {
+      console.error("Error searching for customer:", err);
+    }
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) {
       return;
     }
 
     try {
+      // Get the current shop ID with fallback to default
+      const shopId = getShopIdWithDefault();
+      
       // Format the order data for the API
       const orderData: CreateOrderData = {
         payment_method: paymentMethod,
         customer_id: selectedCustomer?.id,
+        shop_id: shopId,
         items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
@@ -372,7 +447,9 @@ const SalesCounter = () => {
           discount: item.discountPercent ? (item.price * item.quantity * item.discountPercent / 100) : undefined,
         })),
         discount_total: calculateDiscount() + calculateLoyaltyDiscount(),
-        notes: "Created from sales counter"
+        notes: "Created from sales counter",
+        // Ensure we're sending the status as 'pending' to properly trigger inventory management
+        status: "pending"
       };
 
       // Send the order to the API
@@ -418,9 +495,26 @@ const SalesCounter = () => {
       });
     } catch (err) {
       console.error("Error creating order:", err);
+      let errorMessage = "There was a problem processing your order";
+      
+      // Handle specific error types
+      if (err.response && err.response.data && err.response.data.error) {
+        const apiError = err.response.data.error;
+        
+        if (apiError.code === 'SHOP_ID_REQUIRED') {
+          errorMessage = "Shop ID is required for this order. Please select a shop.";
+        } else if (apiError.code === 'SHOP_NOT_FOUND') {
+          errorMessage = "The selected shop is not valid. Please select a different shop.";
+        } else if (apiError.code === 'INSUFFICIENT_STOCK') {
+          errorMessage = apiError.message || "One or more products are out of stock.";
+        } else {
+          errorMessage = apiError.message || errorMessage;
+        }
+      }
+      
       toast({
         title: "Checkout failed",
-        description: "There was a problem processing your order",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -551,20 +645,12 @@ const SalesCounter = () => {
     }
   };
 
-  const filteredCustomers = customerSearchTerm
-    ? customers.filter(
-        (customer) =>
-          customer.name
-            .toLowerCase()
-            .includes(customerSearchTerm.toLowerCase()) ||
-          customer.phone.includes(customerSearchTerm),
-      )
-    : customers;
-
   const selectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
     setShowLoyaltyDialog(false);
     setCustomerSearchTerm("");
+    // Reset the form visibility when selecting a customer
+    setShowNewCustomerForm(false);
   };
 
   // Register a new customer
@@ -759,12 +845,27 @@ const SalesCounter = () => {
 
                       <div className="py-4">
                         <div className="flex flex-col gap-4">
-                          <Input
-                            placeholder={t("search_customers")}
-                            value={customerSearchTerm}
-                            onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                            className="mb-2"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder={t("search_by_phone")}
+                              value={customerSearchTerm}
+                              onChange={(e) => {
+                                setCustomerSearchTerm(e.target.value);
+                                // Reset form visibility when changing search
+                                if (showNewCustomerForm && e.target.value !== newCustomerData.phone) {
+                                  setShowNewCustomerForm(false);
+                                }
+                              }}
+                              className="flex-1"
+                            />
+                            
+                            <Button 
+                              onClick={handleCustomerPhoneSearch}
+                              variant="secondary"
+                            >
+                              <Search className="mr-2 h-4 w-4" /> {t("find_customer")}
+                            </Button>
+                          </div>
 
                           {/* Customer List */}
                           <div className="max-h-[300px] overflow-y-auto rounded-md border">
@@ -810,66 +911,67 @@ const SalesCounter = () => {
                             )}
                           </div>
 
-                          {/* New Customer Form */}
-                          <div className="mt-4 rounded-md border p-4">
-                            <h3 className="mb-3 font-medium">
-                              {t("add_new_customer")}
-                            </h3>
-                            <div className="grid gap-3">
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
-                                  <Label htmlFor="firstName">{t("first_name")}</Label>
-                                  <Input
-                                    id="firstName"
-                                    value={newCustomerData.firstName}
-                                    onChange={(e) =>
-                                      setNewCustomerData({
-                                        ...newCustomerData,
-                                        firstName: e.target.value,
-                                      })
-                                    }
-                                  />
+                          {/* New Customer Form - Only shown after search finds no results */}
+                          {showNewCustomerForm && (
+                            <div className="mt-4 rounded-md border p-4">
+                              <h3 className="mb-3 font-medium">
+                                {t("add_new_customer")}
+                              </h3>
+                              <div className="grid gap-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label htmlFor="firstName">{t("first_name")}</Label>
+                                    <Input
+                                      id="firstName"
+                                      value={newCustomerData.firstName}
+                                      onChange={(e) =>
+                                        setNewCustomerData({
+                                          ...newCustomerData,
+                                          firstName: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label htmlFor="lastName">{t("last_name")}</Label>
+                                    <Input
+                                      id="lastName"
+                                      value={newCustomerData.lastName}
+                                      onChange={(e) =>
+                                        setNewCustomerData({
+                                          ...newCustomerData,
+                                          lastName: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
-                                  <Label htmlFor="lastName">{t("last_name")}</Label>
+                                  <Label htmlFor="phone">{t("phone")}</Label>
                                   <Input
-                                    id="lastName"
-                                    value={newCustomerData.lastName}
-                                    onChange={(e) =>
-                                      setNewCustomerData({
-                                        ...newCustomerData,
-                                        lastName: e.target.value,
-                                      })
-                                    }
+                                    id="phone"
+                                    value={newCustomerData.phone}
+                                    readOnly
+                                    disabled
                                   />
                                 </div>
-                              </div>
-                              <div className="space-y-1">
-                                <Label htmlFor="phone">{t("phone")}</Label>
-                                <Input
-                                  id="phone"
-                                  value={newCustomerData.phone}
-                                  onChange={(e) =>
-                                    setNewCustomerData({
-                                      ...newCustomerData,
-                                      phone: e.target.value,
-                                    })
-                                  }
-                                />
+                                <Button
+                                  className="mt-3 w-full"
+                                  onClick={registerNewCustomer}
+                                >
+                                  {t("add_customer")}
+                                </Button>
                               </div>
                             </div>
-                            <Button
-                              className="mt-3 w-full"
-                              onClick={registerNewCustomer}
-                            >
-                              {t("add_customer")}
-                            </Button>
-                          </div>
+                          )}
                         </div>
                       </div>
 
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowLoyaltyDialog(false)}>
+                        <Button variant="outline" onClick={() => {
+                          setShowLoyaltyDialog(false);
+                          setShowNewCustomerForm(false); 
+                        }}>
                           {t("cancel")}
                         </Button>
                       </DialogFooter>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -36,147 +36,210 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { t } from "@/lib/i18n";
+import { useToast } from "@/components/ui/use-toast";
+import orderService from "@/api/services/orderService";
+import { Order, OrderItem } from "@/api/services/orderService";
 
-interface OrderItem {
-  id: string;
-  productName: string;
-  quantity: number;
-  price: number;
-  total: number;
-}
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  customer: {
-    name: string;
-    email: string;
-  };
-  items: OrderItem[];
-  total: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  paymentStatus: "paid" | "unpaid" | "refunded";
-  orderDate: string;
-  shippedDate?: string;
-  deliveredDate?: string;
-  shippingAddress: string;
-  notes?: string;
+interface OrderWithUIProps extends Order {
+  items: (OrderItem & { productName?: string })[];
 }
 
 const OrderManagement = () => {
   const [activeTab, setActiveTab] = useState("all-orders");
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  
-  // Sample orders data
-  const orders: Order[] = [
-    {
-      id: "1",
-      orderNumber: "ORD-2023-001",
-      customer: {
-        name: "John Smith",
-        email: "john.smith@example.com"
-      },
-      items: [
-        { id: "item1", productName: "Premium Coffee Beans", quantity: 2, price: 24.99, total: 49.98 },
-        { id: "item2", productName: "Ceramic Mug - White", quantity: 1, price: 12.99, total: 12.99 }
-      ],
-      total: 62.97,
-      status: "delivered",
-      paymentStatus: "paid",
-      orderDate: "2023-09-15",
-      shippedDate: "2023-09-16",
-      deliveredDate: "2023-09-18",
-      shippingAddress: "123 Main St, Anytown, CA 12345"
-    },
-    {
-      id: "2",
-      orderNumber: "ORD-2023-002",
-      customer: {
-        name: "Sarah Johnson",
-        email: "sarah.j@example.com"
-      },
-      items: [
-        { id: "item3", productName: "Espresso Machine Filter", quantity: 4, price: 8.50, total: 34.00 },
-        { id: "item4", productName: "Vanilla Syrup", quantity: 2, price: 6.99, total: 13.98 }
-      ],
-      total: 47.98,
-      status: "processing",
-      paymentStatus: "paid",
-      orderDate: "2023-09-16",
-      shippingAddress: "456 Oak Ave, Othertown, NY 67890"
-    },
-    {
-      id: "3",
-      orderNumber: "ORD-2023-003",
-      customer: {
-        name: "Michael Brown",
-        email: "mbrown@example.com"
-      },
-      items: [
-        { id: "item5", productName: "Coffee Grinder - Professional", quantity: 1, price: 129.99, total: 129.99 }
-      ],
-      total: 129.99,
-      status: "shipped",
-      paymentStatus: "paid",
-      orderDate: "2023-09-17",
-      shippedDate: "2023-09-19",
-      shippingAddress: "789 Pine St, Somewhere, TX 54321"
-    },
-    {
-      id: "4",
-      orderNumber: "ORD-2023-004",
-      customer: {
-        name: "Emily Davis",
-        email: "emily.d@example.com"
-      },
-      items: [
-        { id: "item6", productName: "Premium Coffee Beans", quantity: 3, price: 24.99, total: 74.97 },
-        { id: "item7", productName: "Ceramic Mug - Black", quantity: 2, price: 12.99, total: 25.98 }
-      ],
-      total: 100.95,
-      status: "pending",
-      paymentStatus: "unpaid",
-      orderDate: "2023-09-18",
-      shippingAddress: "101 Cedar Ln, Elsewhere, WA 13579",
-      notes: "Please deliver after 5 PM"
-    },
-    {
-      id: "5",
-      orderNumber: "ORD-2023-005",
-      customer: {
-        name: "David Wilson",
-        email: "dwilson@example.com"
-      },
-      items: [
-        { id: "item8", productName: "Coffee Gift Set", quantity: 1, price: 49.99, total: 49.99 }
-      ],
-      total: 49.99,
-      status: "cancelled",
-      paymentStatus: "refunded",
-      orderDate: "2023-09-14",
-      shippingAddress: "202 Maple Dr, Anywhere, FL 24680"
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithUIProps | null>(null);
+  const [orders, setOrders] = useState<OrderWithUIProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const { toast } = useToast();
+
+  // Fetch orders from backend
+  const fetchOrders = async () => {
+    setIsLoading(true);
+    try {
+      const params: any = {
+        page: 1,
+        limit: 50
+      };
+      
+      // Add filters if available
+      if (searchTerm) params.search = searchTerm;
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+      
+      const response = await orderService.getOrders(params);
+      
+      // Check if response and orders array exist
+      if (response && response.orders) {
+        // Map API response to UI model
+        const mappedOrders = response.orders.map(order => {
+          // Ensure items array exists before mapping
+          const items = order.items || [];
+          
+          // Transform items to include productName for UI display
+          const mappedItems = items.map(item => ({
+            ...item,
+            productName: item.product?.name || `Product ${item.product_id}`
+          }));
+          
+          return {
+            ...order,
+            items: mappedItems
+          } as OrderWithUIProps;
+        });
+        
+        setOrders(mappedOrders);
+      } else {
+        // Handle case when orders array is not present
+        console.warn("No orders returned from API", response);
+        setOrders([]);
+        toast({
+          title: "No Orders Found",
+          description: "No orders matched your search criteria",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      setOrders([]); // Set empty array to prevent mapping errors
+      toast({
+        title: "Error",
+        description: "Failed to fetch orders. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const handleCreateOrder = () => {
-    alert("Opening order creation form...");
+    // For now, just redirect to the sales counter page which has shop_id handling
+    window.location.href = '/sales-counter';
+    
+    // Alternatively, we could implement a modal here for direct order creation
+    // that includes shop_id from shopService.getCurrentShopId()
   };
 
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order);
-    setActiveTab("view-order");
+  const handleViewOrder = async (order: OrderWithUIProps) => {
+    setIsLoading(true);
+    try {
+      // Fetch detailed order information
+      const detailedOrder = await orderService.getOrderById(order.id);
+      
+      // Make sure we have a valid order with items array
+      if (detailedOrder) {
+        // Map the API response to UI model
+        const orderWithUI = {
+          ...detailedOrder,
+          items: (detailedOrder.items || []).map(item => ({
+            ...item,
+            productName: item.product?.name || `Product ${item.product_id}`
+          }))
+        } as OrderWithUIProps;
+        
+        setSelectedOrder(orderWithUI);
+        setActiveTab("view-order");
+      } else {
+        throw new Error("Order details not found");
+      }
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch order details. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditOrder = (order: Order) => {
-    alert(`Editing order: ${order.orderNumber}`);
+  const handleEditOrder = (order: OrderWithUIProps) => {
+    // Implement edit functionality or redirect to edit page
+    alert(`Editing order: ${order.order_number}`);
   };
 
-  const handleUpdateOrderStatus = (order: Order, newStatus: Order['status']) => {
-    alert(`Updating order ${order.orderNumber} status to ${newStatus}`);
+  const handleUpdateOrderStatus = async (order: OrderWithUIProps, newStatus: Order['status']) => {
+    setIsLoading(true);
+    try {
+      // Call API to update order status
+      await orderService.updateOrderStatus(order.id, newStatus, `Status changed to ${newStatus}`);
+      
+      // Update local state
+      const updatedOrders = orders.map(o => {
+        if (o.id === order.id) {
+          return { ...o, status: newStatus };
+        }
+        return o;
+      });
+      
+      setOrders(updatedOrders);
+      
+      // If we're viewing this order, update it
+      if (selectedOrder && selectedOrder.id === order.id) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
+      
+      toast({
+        title: "Success",
+        description: `Order status updated to ${newStatus}.`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update order status. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleUpdatePaymentStatus = (order: Order, newStatus: Order['paymentStatus']) => {
-    alert(`Updating order ${order.orderNumber} payment status to ${newStatus}`);
+  const handleUpdatePaymentStatus = async (order: OrderWithUIProps, newStatus: Order['payment_status']) => {
+    setIsLoading(true);
+    try {
+      // Call API to update payment status
+      await orderService.updatePaymentStatus(order.id, newStatus);
+      
+      // Update local state
+      const updatedOrders = orders.map(o => {
+        if (o.id === order.id) {
+          return { ...o, payment_status: newStatus };
+        }
+        return o;
+      });
+      
+      setOrders(updatedOrders);
+      
+      // If we're viewing this order, update it
+      if (selectedOrder && selectedOrder.id === order.id) {
+        setSelectedOrder({ ...selectedOrder, payment_status: newStatus });
+      }
+      
+      toast({
+        title: "Success",
+        description: `Payment status updated to ${newStatus}.`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update payment status. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -189,15 +252,17 @@ const OrderManagement = () => {
   const getStatusIcon = (status: Order['status']) => {
     switch (status) {
       case "pending":
-        return <Clock className="h-4 w-4 text-amber-500" />;
+        return <Clock className="h-5 w-5 text-yellow-500" />;
       case "processing":
-        return <AlertTriangle className="h-4 w-4 text-blue-500" />;
+        return <ClipboardList className="h-5 w-5 text-blue-500" />;
       case "shipped":
-        return <Truck className="h-4 w-4 text-cyan-500" />;
+        return <Truck className="h-5 w-5 text-purple-500" />;
       case "delivered":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "cancelled":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      default:
+        return <AlertTriangle className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -230,16 +295,18 @@ const OrderManagement = () => {
     );
   };
 
-  const getPaymentStatusBadge = (status: Order['paymentStatus']) => {
+  const getPaymentStatusBadge = (status: Order['payment_status']) => {
     const statusClasses = {
       paid: "bg-green-100 text-green-800",
-      unpaid: "bg-amber-100 text-amber-800",
+      pending: "bg-amber-100 text-amber-800",
+      partial: "bg-yellow-100 text-yellow-800",
       refunded: "bg-red-100 text-red-800",
     };
     
     const statusText = {
       paid: "Paid",
-      unpaid: "Unpaid",
+      pending: "Pending Payment",
+      partial: "Partially Paid",
       refunded: "Refunded",
     };
     
@@ -250,7 +317,8 @@ const OrderManagement = () => {
         }`}
       >
         {status === 'paid' && <CheckCircle className="h-3 w-3 mr-1" />}
-        {status === 'unpaid' && <Clock className="h-3 w-3 mr-1" />}
+        {status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+        {status === 'partial' && <CreditCard className="h-3 w-3 mr-1" />}
         {status === 'refunded' && <XCircle className="h-3 w-3 mr-1" />}
         {statusText[status]}
       </span>
@@ -272,533 +340,412 @@ const OrderManagement = () => {
     return orders.filter(order => order.status === tab);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-      <div className="max-w-[1200px] mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold">{t("orders.title")}</h1>
-          <p className="text-muted-foreground">{t("orders.subtitle")}</p>
-        </header>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start mb-6 overflow-x-auto">
-            <TabsTrigger value="all-orders" className="flex items-center">
-              <ClipboardList className="mr-2 h-4 w-4" /> All Orders
-            </TabsTrigger>
-            <TabsTrigger value="pending" className="flex items-center">
-              <Clock className="mr-2 h-4 w-4" /> Pending
-            </TabsTrigger>
-            <TabsTrigger value="processing" className="flex items-center">
-              <AlertTriangle className="mr-2 h-4 w-4" /> Processing
-            </TabsTrigger>
-            <TabsTrigger value="shipped" className="flex items-center">
-              <Truck className="mr-2 h-4 w-4" /> Shipped
-            </TabsTrigger>
-            <TabsTrigger value="delivered" className="flex items-center">
-              <CheckCircle className="mr-2 h-4 w-4" /> Delivered
-            </TabsTrigger>
-            <TabsTrigger value="cancelled" className="flex items-center">
-              <XCircle className="mr-2 h-4 w-4" /> Cancelled
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Order Status Summary Cards */}
-          {activeTab === 'all-orders' && (
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-              <Card className="bg-white shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <Clock className="h-5 w-5 text-amber-500 mr-2" />
-                      <span className="text-sm font-medium">Pending</span>
-                    </div>
-                    <span className="text-2xl font-bold">{getStatusCounts().pending}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <AlertTriangle className="h-5 w-5 text-blue-500 mr-2" />
-                      <span className="text-sm font-medium">Processing</span>
-                    </div>
-                    <span className="text-2xl font-bold">{getStatusCounts().processing}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <Truck className="h-5 w-5 text-cyan-500 mr-2" />
-                      <span className="text-sm font-medium">Shipped</span>
-                    </div>
-                    <span className="text-2xl font-bold">{getStatusCounts().shipped}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                      <span className="text-sm font-medium">Delivered</span>
-                    </div>
-                    <span className="text-2xl font-bold">{getStatusCounts().delivered}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <XCircle className="h-5 w-5 text-red-500 mr-2" />
-                      <span className="text-sm font-medium">Cancelled</span>
-                    </div>
-                    <span className="text-2xl font-bold">{getStatusCounts().cancelled}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Orders List Tabs */}
-          {["all-orders", "pending", "processing", "shipped", "delivered", "cancelled"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="mt-0">
-              {tab === activeTab && tab !== 'view-order' && (
-                <>
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          className="pl-10 w-[250px]"
-                          placeholder="Search orders..."
-                        />
-                      </div>
-                      <Button variant="outline" className="ml-2">
-                        <Filter className="mr-2 h-4 w-4" /> Filter
-                      </Button>
-                      <Button variant="outline" className="ml-2">
-                        <Calendar className="mr-2 h-4 w-4" /> Date Range
-                      </Button>
-                    </div>
-                    <Button onClick={handleCreateOrder}>
-                      <Plus className="mr-2 h-4 w-4" /> Create Order
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    {getFilteredOrders(tab).map((order) => (
-                      <Card key={order.id} className="overflow-hidden">
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row justify-between gap-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center">
-                                <h3 className="font-semibold text-lg">
-                                  {order.orderNumber}
-                                </h3>
-                                <span className="mx-2 text-muted-foreground">•</span>
-                                <span className="text-sm text-muted-foreground">
-                                  {order.orderDate}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                Customer: {order.customer.name}
-                              </p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewOrder(order)}
-                              >
-                                <Eye className="h-4 w-4 mr-1" /> View
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditOrder(order)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                            <div>
-                              <div className="text-sm text-muted-foreground">
-                                Status
-                              </div>
-                              <div className="font-medium mt-1">
-                                {getStatusBadge(order.status)}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-sm text-muted-foreground">
-                                Payment
-                              </div>
-                              <div className="font-medium mt-1">
-                                {getPaymentStatusBadge(order.paymentStatus)}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-sm text-muted-foreground">
-                                Items
-                              </div>
-                              <div className="font-medium">
-                                {order.items.length} ({order.items.reduce((acc, item) => acc + item.quantity, 0)} products)
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-sm text-muted-foreground">
-                                Total
-                              </div>
-                              <div className="font-medium">
-                                {formatCurrency(order.total)}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="mt-4 border-t pt-4">
-                            <div className="text-sm text-muted-foreground mb-2">
-                              Change Status:
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateOrderStatus(order, "pending")}
-                                disabled={order.status === "pending"}
-                              >
-                                <Clock className="h-3 w-3 mr-1" /> Pending
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateOrderStatus(order, "processing")}
-                                disabled={order.status === "processing"}
-                              >
-                                <AlertTriangle className="h-3 w-3 mr-1" /> Processing
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateOrderStatus(order, "shipped")}
-                                disabled={order.status === "shipped"}
-                              >
-                                <Truck className="h-3 w-3 mr-1" /> Shipped
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateOrderStatus(order, "delivered")}
-                                disabled={order.status === "delivered"}
-                              >
-                                <CheckCircle className="h-3 w-3 mr-1" /> Delivered
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdateOrderStatus(order, "cancelled")}
-                                disabled={order.status === "cancelled"}
-                              >
-                                <XCircle className="h-3 w-3 mr-1" /> Cancelled
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </>
-              )}
-            </TabsContent>
-          ))}
-
-          {/* View Order Tab */}
-          {selectedOrder && (
-            <TabsContent value="view-order" className="mt-0">
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setActiveTab("all-orders")}
-                    className="mr-2"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <h2 className="text-xl font-semibold">
-                    Order {selectedOrder.orderNumber}
-                  </h2>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleEditOrder(selectedOrder)}
-                  >
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                  >
-                    <Printer className="mr-2 h-4 w-4" /> Print
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Order Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Order Number</div>
-                      <div className="font-medium">{selectedOrder.orderNumber}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Date</div>
-                      <div className="font-medium">{selectedOrder.orderDate}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Status</div>
-                      <div className="font-medium">{getStatusBadge(selectedOrder.status)}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Payment</div>
-                      <div className="font-medium">{getPaymentStatusBadge(selectedOrder.paymentStatus)}</div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Customer</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Name</div>
-                      <div className="font-medium">{selectedOrder.customer.name}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Email</div>
-                      <div className="font-medium">{selectedOrder.customer.email}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Shipping Address</div>
-                      <div className="font-medium">{selectedOrder.shippingAddress}</div>
-                    </div>
-                    {selectedOrder.notes && (
-                      <div>
-                        <div className="text-sm text-muted-foreground">Notes</div>
-                        <div className="font-medium">{selectedOrder.notes}</div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Order Timeline</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-start">
-                      <div className="mr-2 mt-0.5">
-                        <div className="h-4 w-4 rounded-full bg-blue-500"></div>
-                      </div>
-                      <div>
-                        <div className="font-medium">Order Placed</div>
-                        <div className="text-sm text-muted-foreground">{selectedOrder.orderDate}</div>
-                      </div>
-                    </div>
-                    
-                    {selectedOrder.status !== "pending" && selectedOrder.status !== "cancelled" && (
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5">
-                          <div className="h-4 w-4 rounded-full bg-blue-500"></div>
-                        </div>
-                        <div>
-                          <div className="font-medium">Order Processing</div>
-                          <div className="text-sm text-muted-foreground">
-                            {selectedOrder.orderDate}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {(selectedOrder.status === "shipped" || selectedOrder.status === "delivered") && selectedOrder.shippedDate && (
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5">
-                          <div className="h-4 w-4 rounded-full bg-blue-500"></div>
-                        </div>
-                        <div>
-                          <div className="font-medium">Shipped</div>
-                          <div className="text-sm text-muted-foreground">{selectedOrder.shippedDate}</div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {selectedOrder.status === "delivered" && selectedOrder.deliveredDate && (
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5">
-                          <div className="h-4 w-4 rounded-full bg-green-500"></div>
-                        </div>
-                        <div>
-                          <div className="font-medium">Delivered</div>
-                          <div className="text-sm text-muted-foreground">{selectedOrder.deliveredDate}</div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {selectedOrder.status === "cancelled" && (
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5">
-                          <div className="h-4 w-4 rounded-full bg-red-500"></div>
-                        </div>
-                        <div>
-                          <div className="font-medium">Cancelled</div>
-                          <div className="text-sm text-muted-foreground">{selectedOrder.orderDate}</div>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Order Items</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 font-medium">Product</th>
-                          <th className="text-center py-3 font-medium">Price</th>
-                          <th className="text-center py-3 font-medium">Quantity</th>
-                          <th className="text-right py-3 font-medium">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedOrder.items.map((item) => (
-                          <tr key={item.id} className="border-b">
-                            <td className="py-4">{item.productName}</td>
-                            <td className="py-4 text-center">{formatCurrency(item.price)}</td>
-                            <td className="py-4 text-center">{item.quantity}</td>
-                            <td className="py-4 text-right">{formatCurrency(item.total)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <td colSpan={3} className="py-3 text-right font-medium">Subtotal:</td>
-                          <td className="py-3 text-right">{formatCurrency(selectedOrder.total)}</td>
-                        </tr>
-                        <tr>
-                          <td colSpan={3} className="py-3 text-right font-medium">Tax:</td>
-                          <td className="py-3 text-right">{formatCurrency(selectedOrder.total * 0.1)}</td>
-                        </tr>
-                        <tr>
-                          <td colSpan={3} className="py-3 text-right font-medium">Shipping:</td>
-                          <td className="py-3 text-right">{formatCurrency(5.00)}</td>
-                        </tr>
-                        <tr>
-                          <td colSpan={3} className="py-3 text-right font-bold">Total:</td>
-                          <td className="py-3 text-right font-bold">
-                            {formatCurrency(selectedOrder.total * 1.1 + 5.00)}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="mt-6 flex flex-col md:flex-row justify-between gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Update Status</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdateOrderStatus(selectedOrder, "pending")}
-                      disabled={selectedOrder.status === "pending"}
-                    >
-                      <Clock className="h-3 w-3 mr-1" /> Pending
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdateOrderStatus(selectedOrder, "processing")}
-                      disabled={selectedOrder.status === "processing"}
-                    >
-                      <AlertTriangle className="h-3 w-3 mr-1" /> Processing
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdateOrderStatus(selectedOrder, "shipped")}
-                      disabled={selectedOrder.status === "shipped"}
-                    >
-                      <Truck className="h-3 w-3 mr-1" /> Shipped
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdateOrderStatus(selectedOrder, "delivered")}
-                      disabled={selectedOrder.status === "delivered"}
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" /> Delivered
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdateOrderStatus(selectedOrder, "cancelled")}
-                      disabled={selectedOrder.status === "cancelled"}
-                    >
-                      <XCircle className="h-3 w-3 mr-1" /> Cancelled
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Update Payment</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdatePaymentStatus(selectedOrder, "paid")}
-                      disabled={selectedOrder.paymentStatus === "paid"}
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" /> Mark as Paid
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdatePaymentStatus(selectedOrder, "unpaid")}
-                      disabled={selectedOrder.paymentStatus === "unpaid"}
-                    >
-                      <Clock className="h-3 w-3 mr-1" /> Mark as Unpaid
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdatePaymentStatus(selectedOrder, "refunded")}
-                      disabled={selectedOrder.paymentStatus === "refunded"}
-                    >
-                      <XCircle className="h-3 w-3 mr-1" /> Refund
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          )}
-        </Tabs>
+  const handleApplyFilters = () => {
+    fetchOrders();
+  };
+  
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setStartDate("");
+    setEndDate("");
+    setStatusFilter("");
+    fetchOrders();
+  };
+  
+  const getPaymentStatusColor = (status: Order['payment_status']) => {
+    switch (status) {
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "partial":
+        return "bg-yellow-100 text-yellow-800";
+      case "pending":
+        return "bg-orange-100 text-orange-800";
+      case "refunded":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+  
+  const getNextAvailableStatuses = (currentStatus: Order['status']): Order['status'][] => {
+    switch (currentStatus) {
+      case "pending":
+        return ["processing", "cancelled"];
+      case "processing":
+        return ["shipped", "cancelled"];
+      case "shipped":
+        return ["delivered", "cancelled"];
+      case "delivered":
+        // Final status, no further transitions
+        return [];
+      case "cancelled":
+        // Final status, no further transitions
+        return [];
+      default:
+        return [];
+    }
+  };
+  
+  const renderOrderActions = (order: OrderWithUIProps) => {
+    const nextStatuses = getNextAvailableStatuses(order.status);
+    
+    return (
+      <div className="flex space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleViewOrder(order)}
+        >
+          <Eye className="h-4 w-4 mr-1" /> {t("view")}
+        </Button>
+        
+        {nextStatuses.length > 0 && (
+          <Select onValueChange={(value) => handleUpdateOrderStatus(order, value as Order['status'])}>
+            <SelectTrigger className="h-9 w-[140px]">
+              <SelectValue placeholder={t("update_status")} />
+            </SelectTrigger>
+            <SelectContent>
+              {nextStatuses.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {t(status)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        
+        {order.payment_status === "pending" && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleUpdatePaymentStatus(order, "paid")}
+          >
+            <CreditCard className="h-4 w-4 mr-1" /> {t("mark_as_paid")}
+          </Button>
+        )}
       </div>
+    );
+  };
+  
+  const renderOrdersList = () => {
+    if (isLoading && orders.length === 0) {
+      return (
+        <div className="flex justify-center items-center h-40">
+          <p>{t("loading_orders")}</p>
+        </div>
+      );
+    }
+    
+    if (orders.length === 0) {
+      return (
+        <div className="flex justify-center items-center h-40">
+          <p>{t("no_orders_found")}</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-3">
+        {orders.map((order) => (
+          <Card key={order.id} className="hover:bg-slate-50 transition-colors">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-12 md:col-span-3">
+                  <div className="font-semibold">{order.order_number}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(order.order_date).toLocaleDateString()}
+                  </div>
+                </div>
+                
+                <div className="col-span-12 md:col-span-3">
+                  <div className="text-sm font-semibold">{order.customer?.name || t("guest")}</div>
+                  <div className="text-sm text-muted-foreground">{order.items.length} {t("items")}</div>
+                </div>
+                
+                <div className="col-span-12 md:col-span-2">
+                  <div className="flex items-center space-x-1">
+                    {getStatusIcon(order.status)}
+                    <span className="text-sm">{t(order.status)}</span>
+                  </div>
+                  <div className={`text-xs mt-1 px-2 py-0.5 rounded-full inline-block ${getPaymentStatusColor(order.payment_status)}`}>
+                    {t(order.payment_status)}
+                  </div>
+                </div>
+                
+                <div className="col-span-12 md:col-span-2 text-right">
+                  <div className="font-semibold">
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.total_amount)}
+                  </div>
+                </div>
+                
+                <div className="col-span-12 md:col-span-2">
+                  {renderOrderActions(order)}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+  
+  const renderOrderDetails = () => {
+    if (!selectedOrder) return null;
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedOrder(null);
+              setActiveTab("all-orders");
+            }}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> {t("back_to_orders")}
+          </Button>
+          
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm">
+              <Printer className="h-4 w-4 mr-1" /> {t("print")}
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-1" /> {t("export")}
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("order_details")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("order_number")}</span>
+                  <span className="font-semibold">{selectedOrder.order_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("order_date")}</span>
+                  <span>{new Date(selectedOrder.order_date).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("status")}</span>
+                  <div className="flex items-center space-x-1">
+                    {getStatusIcon(selectedOrder.status)}
+                    <span className="text-sm">{t(selectedOrder.status)}</span>
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("payment_status")}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${getPaymentStatusColor(selectedOrder.payment_status)}`}>
+                    {t(selectedOrder.payment_status)}
+                  </span>
+                </div>
+                {selectedOrder.tracking_number && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("tracking_number")}</span>
+                    <span>{selectedOrder.tracking_number}</span>
+                  </div>
+                )}
+                {selectedOrder.delivery_date && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("delivery_date")}</span>
+                    <span>{new Date(selectedOrder.delivery_date).toLocaleDateString()}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("customer_information")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="font-semibold">{selectedOrder.customer?.name || t("guest")}</div>
+                {selectedOrder.customer?.email && (
+                  <div>{selectedOrder.customer.email}</div>
+                )}
+                {selectedOrder.customer?.phone && (
+                  <div>{selectedOrder.customer.phone}</div>
+                )}
+                {selectedOrder.shipping_address && (
+                  <div className="mt-4">
+                    <h4 className="font-semibold text-sm mb-1">{t("shipping_address")}</h4>
+                    <p className="text-sm">{selectedOrder.shipping_address}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("order_items")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-md">
+              <div className="grid grid-cols-12 gap-4 p-3 border-b bg-muted/50">
+                <div className="col-span-5 font-semibold text-sm">{t("product")}</div>
+                <div className="col-span-2 font-semibold text-sm">{t("price")}</div>
+                <div className="col-span-2 font-semibold text-sm">{t("quantity")}</div>
+                <div className="col-span-3 font-semibold text-sm text-right">{t("total")}</div>
+              </div>
+              
+              {selectedOrder.items.map((item) => (
+                <div key={item.id} className="grid grid-cols-12 gap-4 p-3 border-b last:border-0">
+                  <div className="col-span-5">
+                    <div className="font-medium">{item.productName}</div>
+                    <div className="text-xs text-muted-foreground">SKU: {item.product_id}</div>
+                  </div>
+                  <div className="col-span-2">
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.unit_price)}
+                  </div>
+                  <div className="col-span-2">{item.quantity}</div>
+                  <div className="col-span-3 text-right font-medium">
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.total_price)}
+                  </div>
+                </div>
+              ))}
+              
+              <div className="grid grid-cols-12 gap-4 p-3 bg-muted/50">
+                <div className="col-span-9 text-right font-semibold">{t("total")}</div>
+                <div className="col-span-3 text-right font-semibold">
+                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedOrder.total_amount)}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("order_history")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {selectedOrder.status_history.map((history) => (
+                  <div key={history.id} className="flex gap-4 items-start">
+                    <div className="mt-1">
+                      {getStatusIcon(history.status as Order['status'])}
+                    </div>
+                    <div>
+                      <div className="font-medium">{t(history.status)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(history.created_at).toLocaleString()}
+                      </div>
+                      {history.user && (
+                        <div className="text-xs text-muted-foreground">
+                          {t("by")} {history.user.first_name} {history.user.last_name}
+                        </div>
+                      )}
+                      {history.note && (
+                        <div className="text-sm mt-1">{history.note}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  };
+  
+  return (
+    <div className="container mx-auto py-6 space-y-8">
+      <div className="flex flex-col md:flex-row justify-between md:items-center space-y-4 md:space-y-0">
+        <h1 className="text-2xl font-bold">{t("order_management")}</h1>
+        <Button onClick={handleCreateOrder}>
+          <Plus className="h-4 w-4 mr-2" /> {t("create_order")}
+        </Button>
+      </div>
+      
+      <Tabs defaultValue="all-orders" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all-orders">{t("all_orders")}</TabsTrigger>
+          {selectedOrder && <TabsTrigger value="view-order">{t("order_details")}</TabsTrigger>}
+        </TabsList>
+        
+        <TabsContent value="all-orders" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("filter_orders")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="col-span-1 md:col-span-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder={t("search_by_order_or_customer")}
+                      className="pl-8"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Input
+                    type="date"
+                    placeholder={t("start_date")}
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Input
+                    type="date"
+                    placeholder={t("end_date")}
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("status")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("all")}</SelectItem>
+                      <SelectItem value="pending">{t("pending")}</SelectItem>
+                      <SelectItem value="processing">{t("processing")}</SelectItem>
+                      <SelectItem value="shipped">{t("shipped")}</SelectItem>
+                      <SelectItem value="delivered">{t("delivered")}</SelectItem>
+                      <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button variant="outline" onClick={handleResetFilters}>
+                  {t("reset")}
+                </Button>
+                <Button onClick={handleApplyFilters}>
+                  <Filter className="h-4 w-4 mr-2" /> {t("apply_filters")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {renderOrdersList()}
+        </TabsContent>
+        
+        <TabsContent value="view-order">
+          {renderOrderDetails()}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

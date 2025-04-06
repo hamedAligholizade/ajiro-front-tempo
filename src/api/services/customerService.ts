@@ -128,6 +128,23 @@ const customerService = {
     );
     return response.data.data.customer;
   },
+
+  /**
+   * Get a customer by phone number
+   * @param phone The phone number to search for
+   * @returns The customer data if found, or null
+   */
+  async getCustomerByPhone(phone: string): Promise<Customer | null> {
+    try {
+      const response = await apiClient.get(`/customers/search`, {
+        params: { phone }
+      });
+      return response.data.customer || null;
+    } catch (error) {
+      console.error('Error getting customer by phone:', error);
+      return null;
+    }
+  },
 };
 
 export default customerService; 

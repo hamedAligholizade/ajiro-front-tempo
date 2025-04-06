@@ -1,31 +1,76 @@
 /**
- * Shop context utilities for managing the current shop ID
+ * Shop context utility for managing shop ID
  */
 
-// Local storage key for the current shop ID
-const CURRENT_SHOP_KEY = 'ajiro_current_shop';
+// The key used for storing active shop ID in localStorage
+const ACTIVE_SHOP_ID_KEY = 'activeShopId';
 
 /**
- * Get the current shop ID from local storage
- * @returns The current shop ID or null if not set
+ * Get the current shop ID from localStorage
+ * @returns The current shop ID or undefined if not set
  */
-export const getCurrentShopId = (): string | null => {
-  return localStorage.getItem(CURRENT_SHOP_KEY);
+export const getCurrentShopId = (): string | undefined => {
+  try {
+    // Handle server-side rendering case
+    if (typeof window === 'undefined') return undefined;
+    
+    // Get shop ID from localStorage
+    const shopId = localStorage.getItem(ACTIVE_SHOP_ID_KEY);
+    
+    if (!shopId) {
+      console.warn('No active shop ID found in localStorage');
+      return undefined;
+    }
+    
+    return shopId;
+  } catch (error) {
+    console.error('Error getting current shop ID:', error);
+    return undefined;
+  }
 };
 
 /**
- * Set the current shop ID in local storage
- * @param shopId - The shop ID to set as current
+ * Set the current shop ID in localStorage
+ * @param shopId The shop ID to set as active
  */
 export const setCurrentShopId = (shopId: string): void => {
-  localStorage.setItem(CURRENT_SHOP_KEY, shopId);
+  try {
+    if (typeof window === 'undefined') return;
+    if (!shopId) {
+      console.error('Cannot set empty shop ID');
+      return;
+    }
+    
+    localStorage.setItem(ACTIVE_SHOP_ID_KEY, shopId);
+  } catch (error) {
+    console.error('Error setting current shop ID:', error);
+  }
 };
 
 /**
- * Clear the current shop ID from local storage
+ * Clear the current shop ID from localStorage
  */
 export const clearCurrentShopId = (): void => {
-  localStorage.removeItem(CURRENT_SHOP_KEY);
+  try {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(ACTIVE_SHOP_ID_KEY);
+  } catch (error) {
+    console.error('Error clearing current shop ID:', error);
+  }
+};
+
+// Provide a default shop ID for development environments
+export const getDefaultShopId = (): string => {
+  // This would normally come from an environment variable or user settings
+  return '1';
+};
+
+/**
+ * Get the current shop ID or fall back to a default if none is set
+ */
+export const getShopIdWithDefault = (): string => {
+  const shopId = getCurrentShopId();
+  return shopId || getDefaultShopId();
 };
 
 /**

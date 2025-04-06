@@ -278,7 +278,7 @@ const AddProductModal = ({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="no-category" disabled>
                         دسته‌بندی موجود نیست
                       </SelectItem>
                     )}

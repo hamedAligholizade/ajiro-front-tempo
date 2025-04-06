@@ -9,6 +9,12 @@ export interface OrderItem {
   tax?: number;
   subtotal: number;
   total: number;
+  product?: {
+    id: string;
+    name: string;
+    sku?: string;
+    image_url?: string;
+  };
 }
 
 export interface Order {
@@ -17,8 +23,10 @@ export interface Order {
   customer_id?: string;
   staff_id?: string;
   reference_number: string;
+  order_number?: string;
   order_date: string;
-  status: 'completed' | 'cancelled' | 'refunded' | 'pending';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  payment_status: 'pending' | 'paid' | 'partial' | 'refunded';
   payment_method: 'cash' | 'card' | 'mobile';
   subtotal: number;
   discount_total: number;
@@ -32,6 +40,7 @@ export interface Order {
 
 export interface CreateOrderData {
   customer_id?: string;
+  shop_id: string;
   payment_method: 'cash' | 'card' | 'mobile';
   items: {
     product_id: string;
@@ -41,6 +50,7 @@ export interface CreateOrderData {
   }[];
   discount_total?: number;
   notes?: string;
+  status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 }
 
 // Order API calls
@@ -125,6 +135,31 @@ const orderService = {
       };
     }>('/orders/daily-summary', { params: { date } });
     return response.data.data;
+  },
+
+  // Update an order status
+  updateOrderStatus: async (
+    id: string, 
+    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled',
+    note?: string
+  ): Promise<Order> => {
+    const response = await apiClient.post<{ success: boolean; data: { order: Order } }>(
+      `/orders/${id}/status`, 
+      { status, note }
+    );
+    return response.data.data.order;
+  },
+
+  // Update payment status
+  updatePaymentStatus: async (
+    id: string, 
+    payment_status: 'pending' | 'paid' | 'partial' | 'refunded'
+  ): Promise<Order> => {
+    const response = await apiClient.post<{ success: boolean; data: { order: Order } }>(
+      `/orders/${id}/payment-status`, 
+      { payment_status }
+    );
+    return response.data.data.order;
   },
 };
 
