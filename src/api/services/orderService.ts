@@ -95,7 +95,15 @@ const orderService = {
 
   // Create a new order (sales transaction)
   createOrder: async (orderData: CreateOrderData): Promise<Order> => {
-    const response = await apiClient.post<{ success: boolean; data: { order: Order } }>('/orders', orderData);
+    // For orders from sales counter, ensure they are marked as delivered 
+    // and include a flag to indicate inventory should be updated
+    const finalOrderData = {
+      ...orderData,
+      status: orderData.status || 'delivered',
+      from_sales_counter: true, // This flag will tell the backend to update inventory
+    };
+    
+    const response = await apiClient.post<{ success: boolean; data: { order: Order } }>('/orders', finalOrderData);
     return response.data.data.order;
   },
 

@@ -123,7 +123,7 @@ const SalesCounter = () => {
             ? apiProduct.selling_price 
             : (apiProduct.selling_price ? parseFloat(apiProduct.selling_price) : 0),
           category: apiProduct.category?.name || 'Uncategorized',
-          stock: apiProduct.inventory?.stock_quantity || 0,
+          stock: apiProduct.inventory?.available_quantity || 0,
           imageUrl: apiProduct.image_url
         }));
         
@@ -382,47 +382,57 @@ const SalesCounter = () => {
       return;
     }
     
-    try {
-      // Try to find customer by phone
-      const response = await customerService.getCustomerByPhone(customerSearchTerm);
+    // Check if it's an 11-digit phone number
+    const is11DigitPhone = /^\d{11}$/.test(customerSearchTerm);
+    
+    // Pre-fill the phone field for new customer form
+    setNewCustomerData({
+      ...newCustomerData,
+      phone: customerSearchTerm,
+    });
+    
+    // Try to find customer by phone - this already handles errors internally
+    const response = await customerService.getCustomerByPhone(customerSearchTerm);
+    
+    if (response && response.id) {
+      // Customer found - select them
+      const customer = {
+        id: response.id,
+        name: `${response.first_name} ${response.last_name}`,
+        phone: response.phone || "",
+        loyaltyPoints: response.loyalty_points,
+        loyaltyTier: response.loyalty_tier,
+      };
       
-      if (response && response.id) {
-        // Transform and select the customer
-        const customer = {
-          id: response.id,
-          name: `${response.first_name} ${response.last_name}`,
-          phone: response.phone || "",
-          loyaltyPoints: response.loyalty_points,
-          loyaltyTier: response.loyalty_tier,
-        };
-        
-        selectCustomer(customer);
-        // Hide new customer form as we found an existing customer
-        setShowNewCustomerForm(false);
-        
-        toast({
-          title: t("customer_found"),
-          description: t("customer_loaded_successfully"),
-          variant: "default",
-        });
-      } else {
-        // No customer found - pre-fill the phone field for new customer form
-        setNewCustomerData({
-          ...newCustomerData,
-          phone: customerSearchTerm,
-        });
-        
-        // Show the new customer form fields
+      selectCustomer(customer);
+      // Hide new customer form as we found an existing customer
+      setShowNewCustomerForm(false);
+      
+      toast({
+        title: t("customer_found"),
+        description: t("customer_loaded_successfully"),
+        variant: "default",
+      });
+    } else {
+      // No customer found
+      if (is11DigitPhone) {
+        // If it's an 11-digit phone, always show the form for new customer
         setShowNewCustomerForm(true);
         
         toast({
           title: t("customer_not_found"),
-          description: t("create_new_customer_with_phone"),
+          description: t("create_new_customer"),
           variant: "default",
         });
+      } else {
+        // Not an 11-digit phone, just show an error message
+        setShowNewCustomerForm(false);
+        toast({
+          title: t("customer_not_found"),
+          description: t("try_different_phone"),
+          variant: "destructive",
+        });
       }
-    } catch (err) {
-      console.error("Error searching for customer:", err);
     }
   };
 
@@ -448,11 +458,13 @@ const SalesCounter = () => {
         })),
         discount_total: calculateDiscount() + calculateLoyaltyDiscount(),
         notes: "Created from sales counter",
-        // Ensure we're sending the status as 'pending' to properly trigger inventory management
-        status: "pending"
+        // Set status to 'delivered' instead of 'completed' since it's a direct sale
+        // 'delivered' is an accepted value in the Order type
+        status: "delivered"
       };
 
-      // Send the order to the API
+      // Send the order to the API - this will automatically update inventory
+      // since the backend handles inventory updates when status is 'delivered'
       const order = await orderService.createOrder(orderData);
       
       // Generate receipt data for display
@@ -462,7 +474,7 @@ const SalesCounter = () => {
         date: new Date(order.order_date).toLocaleString(),
         customer: selectedCustomer
           ? `${selectedCustomer.name} (${selectedCustomer.phone})`
-          : "Guest",
+          : t("guest"),
         items: cart.map((item) => ({
           name: item.name,
           quantity: item.quantity,
@@ -489,35 +501,51 @@ const SalesCounter = () => {
       setSelectedCustomer(null);
       
       toast({
-        title: "Order completed",
-        description: "The order has been successfully processed",
+        title: t("order_completed"),
+        description: t("order_processed_successfully"),
         variant: "default",
       });
     } catch (err) {
       console.error("Error creating order:", err);
-      let errorMessage = "There was a problem processing your order";
+      let errorMessage = t("order_processing_problem");
       
       // Handle specific error types
       if (err.response && err.response.data && err.response.data.error) {
         const apiError = err.response.data.error;
         
         if (apiError.code === 'SHOP_ID_REQUIRED') {
-          errorMessage = "Shop ID is required for this order. Please select a shop.";
+          errorMessage = t("shop_id_required");
         } else if (apiError.code === 'SHOP_NOT_FOUND') {
-          errorMessage = "The selected shop is not valid. Please select a different shop.";
+          errorMessage = t("shop_not_valid");
         } else if (apiError.code === 'INSUFFICIENT_STOCK') {
-          errorMessage = apiError.message || "One or more products are out of stock.";
+          errorMessage = apiError.message || t("products_out_of_stock");
         } else {
           errorMessage = apiError.message || errorMessage;
         }
       }
       
       toast({
-        title: "Checkout failed",
+        title: t("checkout_failed"),
         description: errorMessage,
         variant: "destructive",
       });
     }
+  };
+
+  // Helper function to format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fa-IR', {
+      style: 'currency',
+      currency: 'IRR',
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  // Safe number conversion to prevent NaN
+  const safeNumberConversion = (value) => {
+    const number = Number(value);
+    return isNaN(number) ? 0 : number;
   };
 
   const handlePrintReceipt = () => {
@@ -525,12 +553,18 @@ const SalesCounter = () => {
       // Create a printable version of the receipt
       const printWindow = window.open("", "_blank");
       if (printWindow) {
+        // Calculate earned points - ensure it's always a valid number
+        const earnedPoints = Math.floor(receiptData.total) || 0;
+        // Safely calculate new balance to prevent NaN
+        const currentPoints = selectedCustomer ? safeNumberConversion(selectedCustomer.loyaltyPoints) : 0;
+        const newBalance = currentPoints + earnedPoints;
+
         printWindow.document.write(`
           <html>
             <head>
-              <title>Receipt</title>
+              <title>${t("receipt")}</title>
               <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; direction: rtl; }
                 .receipt { max-width: 300px; margin: 0 auto; }
                 .header { text-align: center; margin-bottom: 20px; }
                 .info { display: flex; justify-content: space-between; margin-bottom: 15px; }
@@ -546,29 +580,29 @@ const SalesCounter = () => {
             <body>
               <div class="receipt">
                 <div class="header">
-                  <h2>Store Receipt</h2>
-                  <p>Thank you for your purchase!</p>
+                  <h2>${t("store_receipt")}</h2>
+                  <p>${t("thank_you_for_purchase")}</p>
                 </div>
                 
                 <div class="info">
                   <div>
-                    <p><strong>Receipt #:</strong> ${receiptData.receiptNumber}</p>
-                    <p><strong>Date:</strong> ${receiptData.date}</p>
+                    <p><strong>${t("receipt_number")}:</strong> ${receiptData.reference || receiptData.id}</p>
+                    <p><strong>${t("date")}:</strong> ${receiptData.date}</p>
                   </div>
                   <div>
-                    <p><strong>Payment:</strong> ${receiptData.paymentMethod}</p>
-                    ${receiptData.customer ? `<p><strong>Customer:</strong> ${receiptData.customer.name}</p>` : ""}
+                    <p><strong>${t("payment_method")}:</strong> ${t(receiptData.paymentMethod)}</p>
+                    ${receiptData.customer ? `<p><strong>${t("customer")}:</strong> ${receiptData.customer}</p>` : ""}
                   </div>
                 </div>
                 
                 <div class="items">
-                  <h3>Items</h3>
+                  <h3>${t("items")}</h3>
                   ${receiptData.items
                     .map(
-                      (item: CartItem) => `
+                      (item) => `
                     <div class="item">
-                      <span>${item.name} × ${item.quantity} ${item.discountPercent ? `(${item.discountPercent}% off)` : ""}</span>
-                      <span>${(item.price * item.quantity - (item.discountPercent ? (item.price * item.quantity * item.discountPercent) / 100 : 0)).toFixed(2)}</span>
+                      <span>${item.name} × ${item.quantity} ${item.discount > 0 ? `(${t("discount")})` : ""}</span>
+                      <span>${formatCurrency(item.price * item.quantity - item.discount)}</span>
                     </div>
                   `,
                     )
@@ -577,16 +611,16 @@ const SalesCounter = () => {
                 
                 <div class="totals">
                   <div class="total-row">
-                    <span>Subtotal:</span>
-                    <span>${receiptData.subtotal.toFixed(2)}</span>
+                    <span>${t("subtotal")}:</span>
+                    <span>${formatCurrency(receiptData.subtotal)}</span>
                   </div>
                   
                   ${
                     receiptData.discount > 0
                       ? `
                     <div class="total-row">
-                      <span>Discount:</span>
-                      <span>-${receiptData.discount.toFixed(2)}</span>
+                      <span>${t("discount")}:</span>
+                      <span>-${formatCurrency(receiptData.discount)}</span>
                     </div>
                   `
                       : ""
@@ -596,21 +630,21 @@ const SalesCounter = () => {
                     receiptData.loyaltyDiscount > 0
                       ? `
                     <div class="total-row">
-                      <span>Loyalty Discount:</span>
-                      <span>-${receiptData.loyaltyDiscount.toFixed(2)}</span>
+                      <span>${t("loyalty_discount")}:</span>
+                      <span>-${formatCurrency(receiptData.loyaltyDiscount)}</span>
                     </div>
                   `
                       : ""
                   }
                   
                   <div class="total-row">
-                    <span>Tax:</span>
-                    <span>${receiptData.tax.toFixed(2)}</span>
+                    <span>${t("tax")}:</span>
+                    <span>${formatCurrency(receiptData.tax)}</span>
                   </div>
                   
                   <div class="total-row grand-total">
-                    <span>Total:</span>
-                    <span>${receiptData.total.toFixed(2)}</span>
+                    <span>${t("total")}:</span>
+                    <span>${formatCurrency(receiptData.total)}</span>
                   </div>
                 </div>
                 
@@ -618,17 +652,18 @@ const SalesCounter = () => {
                   receiptData.customer
                     ? `
                   <div style="background-color: #f0f8ff; padding: 10px; border-radius: 5px;">
-                    <p style="font-weight: bold; margin: 0 0 5px 0;">Loyalty Program</p>
-                    <p style="margin: 0 0 5px 0;">Points earned: ${Math.floor(receiptData.total)}</p>
-                    <p style="margin: 0;">New balance: ${receiptData.customer.loyaltyPoints + Math.floor(receiptData.total)} points</p>
+                    <p style="font-weight: bold; margin: 0 0 5px 0;">${t("loyalty_program")}</p>
+                    <p style="margin: 0 0 5px 0;">${t("points_earned")}: ${earnedPoints}</p>
+                    <p style="margin: 0;">${t("new_balance")}: ${newBalance} ${t("points")}</p>
+                    ${selectedCustomer ? `<p style="margin: 0;">${t("loyalty_tier")}: ${t(selectedCustomer.loyaltyTier)}</p>` : ''}
                   </div>
                 `
                     : ""
                 }
                 
                 <div class="footer">
-                  <p>Thank you for shopping with us!</p>
-                  <p>Please keep this receipt for your records.</p>
+                  <p>${t("thank_you_for_shopping")}</p>
+                  <p>${t("keep_receipt")}</p>
                 </div>
               </div>
               <script>
@@ -1290,7 +1325,7 @@ const SalesCounter = () => {
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <p>
-                    <strong>Receipt #:</strong> {receiptData.receiptNumber}
+                    <strong>Receipt #:</strong> {receiptData.reference || receiptData.id}
                   </p>
                   <p>
                     <strong>Date:</strong> {receiptData.date}

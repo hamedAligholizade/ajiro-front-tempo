@@ -82,7 +82,7 @@ const OrderManagement = () => {
           // Transform items to include productName for UI display
           const mappedItems = items.map(item => ({
             ...item,
-            productName: item.product?.name || `Product ${item.product_id}`
+            productName: item.product?.name || `${t("product")} ${item.product_id}`
           }));
           
           return {
@@ -97,8 +97,8 @@ const OrderManagement = () => {
         console.warn("No orders returned from API", response);
         setOrders([]);
         toast({
-          title: "No Orders Found",
-          description: "No orders matched your search criteria",
+          title: t("no_orders_found"),
+          description: t("no_orders_matched_criteria"),
           variant: "default"
         });
       }
@@ -106,8 +106,8 @@ const OrderManagement = () => {
       console.error("Error fetching orders:", error);
       setOrders([]); // Set empty array to prevent mapping errors
       toast({
-        title: "Error",
-        description: "Failed to fetch orders. Please try again.",
+        title: t("error"),
+        description: t("failed_to_fetch_orders"),
         variant: "destructive"
       });
     } finally {
@@ -140,20 +140,20 @@ const OrderManagement = () => {
           ...detailedOrder,
           items: (detailedOrder.items || []).map(item => ({
             ...item,
-            productName: item.product?.name || `Product ${item.product_id}`
+            productName: item.product?.name || `${t("product")} ${item.product_id}`
           }))
         } as OrderWithUIProps;
         
         setSelectedOrder(orderWithUI);
         setActiveTab("view-order");
       } else {
-        throw new Error("Order details not found");
+        throw new Error(t("order_details_not_found"));
       }
     } catch (error) {
       console.error("Error fetching order details:", error);
       toast({
-        title: "Error",
-        description: "Failed to fetch order details. Please try again.",
+        title: t("error"),
+        description: t("failed_to_fetch_order_details"),
         variant: "destructive"
       });
     } finally {
@@ -163,14 +163,14 @@ const OrderManagement = () => {
 
   const handleEditOrder = (order: OrderWithUIProps) => {
     // Implement edit functionality or redirect to edit page
-    alert(`Editing order: ${order.order_number}`);
+    alert(`${t("editing_order")}: ${order.order_number}`);
   };
 
   const handleUpdateOrderStatus = async (order: OrderWithUIProps, newStatus: Order['status']) => {
     setIsLoading(true);
     try {
       // Call API to update order status
-      await orderService.updateOrderStatus(order.id, newStatus, `Status changed to ${newStatus}`);
+      await orderService.updateOrderStatus(order.id, newStatus, `${t("status_changed_to")} ${t(newStatus)}`);
       
       // Update local state
       const updatedOrders = orders.map(o => {
@@ -188,19 +188,17 @@ const OrderManagement = () => {
       }
       
       toast({
-        title: "Success",
-        description: `Order status updated to ${newStatus}.`,
+        title: t("success"),
+        description: `${t("order_status_updated_to")} ${t(newStatus)}.`,
         variant: "default"
       });
     } catch (error) {
       console.error("Error updating order status:", error);
       toast({
-        title: "Error",
-        description: "Failed to update order status. Please try again.",
+        title: t("error"),
+        description: t("failed_to_update_order_status"),
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -226,15 +224,15 @@ const OrderManagement = () => {
       }
       
       toast({
-        title: "Success",
-        description: `Payment status updated to ${newStatus}.`,
+        title: t("success"),
+        description: `${t("payment_status_updated_to")} ${t(newStatus)}.`,
         variant: "default"
       });
     } catch (error) {
       console.error("Error updating payment status:", error);
       toast({
-        title: "Error",
-        description: "Failed to update payment status. Please try again.",
+        title: t("error"),
+        description: t("failed_to_update_payment_status"),
         variant: "destructive"
       });
     } finally {
@@ -242,10 +240,13 @@ const OrderManagement = () => {
     }
   };
 
+  // Format currency in IRR
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    return new Intl.NumberFormat('fa-IR', {
+      style: 'currency',
+      currency: 'IRR',
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0
     }).format(amount);
   };
 
@@ -275,14 +276,6 @@ const OrderManagement = () => {
       cancelled: "bg-red-100 text-red-800",
     };
     
-    const statusText = {
-      pending: "Pending",
-      processing: "Processing",
-      shipped: "Shipped", 
-      delivered: "Delivered",
-      cancelled: "Cancelled",
-    };
-    
     return (
       <span
         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -290,7 +283,7 @@ const OrderManagement = () => {
         }`}
       >
         <span className="mr-1">{getStatusIcon(status)}</span>
-        {statusText[status]}
+        {t(status)}
       </span>
     );
   };
@@ -303,11 +296,11 @@ const OrderManagement = () => {
       refunded: "bg-red-100 text-red-800",
     };
     
-    const statusText = {
-      paid: "Paid",
-      pending: "Pending Payment",
-      partial: "Partially Paid",
-      refunded: "Refunded",
+    const statusIcons = {
+      paid: <CheckCircle className="h-3 w-3 mr-1" />,
+      pending: <Clock className="h-3 w-3 mr-1" />,
+      partial: <CreditCard className="h-3 w-3 mr-1" />,
+      refunded: <XCircle className="h-3 w-3 mr-1" />,
     };
     
     return (
@@ -316,11 +309,8 @@ const OrderManagement = () => {
           statusClasses[status]
         }`}
       >
-        {status === 'paid' && <CheckCircle className="h-3 w-3 mr-1" />}
-        {status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-        {status === 'partial' && <CreditCard className="h-3 w-3 mr-1" />}
-        {status === 'refunded' && <XCircle className="h-3 w-3 mr-1" />}
-        {statusText[status]}
+        {statusIcons[status]}
+        {t(status === 'pending' ? 'payment_pending' : status)}
       </span>
     );
   };
@@ -451,9 +441,9 @@ const OrderManagement = () => {
             <CardContent className="p-4">
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-12 md:col-span-3">
-                  <div className="font-semibold">{order.order_number}</div>
+                  <div className="font-semibold">{order.order_number || order.reference_number}</div>
                   <div className="text-sm text-muted-foreground">
-                    {new Date(order.order_date).toLocaleDateString()}
+                    {new Date(order.order_date).toLocaleDateString('fa-IR')}
                   </div>
                 </div>
                 
@@ -463,18 +453,18 @@ const OrderManagement = () => {
                 </div>
                 
                 <div className="col-span-12 md:col-span-2">
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-1 space-x-reverse">
                     {getStatusIcon(order.status)}
-                    <span className="text-sm">{t(order.status)}</span>
+                    <span className="text-sm mr-1">{t(order.status)}</span>
                   </div>
                   <div className={`text-xs mt-1 px-2 py-0.5 rounded-full inline-block ${getPaymentStatusColor(order.payment_status)}`}>
-                    {t(order.payment_status)}
+                    {t(order.payment_status === 'pending' ? 'payment_pending' : order.payment_status)}
                   </div>
                 </div>
                 
                 <div className="col-span-12 md:col-span-2 text-right">
                   <div className="font-semibold">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.total_amount)}
+                    {formatCurrency(order.total_amount)}
                   </div>
                 </div>
                 
@@ -590,7 +580,8 @@ const OrderManagement = () => {
           </CardHeader>
           <CardContent>
             <div className="border rounded-md">
-              <div className="grid grid-cols-12 gap-4 p-3 border-b bg-muted/50">
+              {/* Desktop view header - hidden on mobile */}
+              <div className="hidden md:grid grid-cols-12 gap-4 p-3 border-b bg-muted/50">
                 <div className="col-span-5 font-semibold text-sm">{t("product")}</div>
                 <div className="col-span-2 font-semibold text-sm">{t("price")}</div>
                 <div className="col-span-2 font-semibold text-sm">{t("quantity")}</div>
@@ -598,25 +589,51 @@ const OrderManagement = () => {
               </div>
               
               {selectedOrder.items.map((item) => (
-                <div key={item.id} className="grid grid-cols-12 gap-4 p-3 border-b last:border-0">
-                  <div className="col-span-5">
+                <div key={item.id} className="p-3 border-b last:border-0">
+                  {/* Mobile view */}
+                  <div className="md:hidden space-y-2">
                     <div className="font-medium">{item.productName}</div>
                     <div className="text-xs text-muted-foreground">SKU: {item.product_id}</div>
+                    <div className="flex justify-between mt-2">
+                      <div>
+                        <span className="text-xs text-muted-foreground mr-1">{t("price")}:</span>
+                        <span>{formatCurrency(item.unit_price)}</span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground mr-1">{t("quantity")}:</span>
+                        <span>{item.quantity}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-dashed">
+                      <span className="font-semibold">{t("total")}:</span>
+                      <span className="font-semibold">{formatCurrency(item.total_price)}</span>
+                    </div>
                   </div>
-                  <div className="col-span-2">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.unit_price)}
-                  </div>
-                  <div className="col-span-2">{item.quantity}</div>
-                  <div className="col-span-3 text-right font-medium">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.total_price)}
+                  
+                  {/* Desktop view */}
+                  <div className="hidden md:grid grid-cols-12 gap-4">
+                    <div className="col-span-5">
+                      <div className="font-medium">{item.productName}</div>
+                      <div className="text-xs text-muted-foreground">SKU: {item.product_id}</div>
+                    </div>
+                    <div className="col-span-2">
+                      {formatCurrency(item.unit_price)}
+                    </div>
+                    <div className="col-span-2">{item.quantity}</div>
+                    <div className="col-span-3 text-right font-medium">
+                      {formatCurrency(item.total_price)}
+                    </div>
                   </div>
                 </div>
               ))}
               
-              <div className="grid grid-cols-12 gap-4 p-3 bg-muted/50">
-                <div className="col-span-9 text-right font-semibold">{t("total")}</div>
-                <div className="col-span-3 text-right font-semibold">
-                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedOrder.total_amount)}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-3 bg-muted/50">
+                <div className="hidden md:block md:col-span-9 text-right font-semibold">{t("total")}</div>
+                <div className="flex justify-between md:col-span-3 md:text-right md:justify-end">
+                  <span className="font-semibold md:hidden">{t("total")}:</span>
+                  <span className="font-semibold">
+                    {formatCurrency(selectedOrder.total_amount)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -657,6 +674,23 @@ const OrderManagement = () => {
         )}
       </div>
     );
+  };
+  
+  const getStatusBorderColor = (status: Order['status']) => {
+    switch (status) {
+      case "pending":
+        return "bg-amber-400";
+      case "processing":
+        return "bg-blue-400";
+      case "shipped":
+        return "bg-cyan-400";
+      case "delivered":
+        return "bg-green-400";
+      case "cancelled":
+        return "bg-red-400";
+      default:
+        return "bg-gray-400";
+    }
   };
   
   return (

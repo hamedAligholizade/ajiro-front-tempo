@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { t } from "@/lib/i18n";
-import { User, Store, Package, Bell, Shield, CreditCard, UserPlus, X, Trash2 } from "lucide-react";
+import { User, Store, Package, Bell, Shield, CreditCard, UserPlus, X, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/redux/hooks";
 import shopService, { ShopUser } from "@/api/services/shopService";
@@ -34,7 +34,11 @@ const Settings = () => {
   
   // New states for product settings
   const [newCategory, setNewCategory] = useState('');
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryToEdit, setCategoryToEdit] = useState('');
   const [newUnit, setNewUnit] = useState({ name: '', abbreviation: '' });
+  const [editingUnit, setEditingUnit] = useState(null);
+  const [unitToEdit, setUnitToEdit] = useState({ name: '', abbreviation: '' });
   const [taxSettings, setTaxSettings] = useState({
     tax_enabled: true,
     tax_rate: 9
@@ -177,6 +181,40 @@ const Settings = () => {
     }
   };
 
+  // Handle editing a category
+  const handleEditCategory = async (id) => {
+    if (!categoryToEdit.trim()) {
+      setError('لطفاً نام دسته‌بندی را وارد کنید');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await categoryService.updateCategory(id, {
+        name: categoryToEdit
+      });
+      
+      // Update category in the list
+      setCategories(categories.map(cat => cat.id === id ? {...cat, name: categoryToEdit} : cat));
+      
+      // Clear editing state
+      setEditingCategory(null);
+      setCategoryToEdit('');
+      setError(null);
+    } catch (err) {
+      console.error('Error updating category:', err);
+      setError(err.response?.data?.message || 'خطا در ویرایش دسته‌بندی');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Set up category for editing
+  const startEditingCategory = (category) => {
+    setEditingCategory(category.id);
+    setCategoryToEdit(category.name);
+  };
+
   // Handle deleting a category
   const handleDeleteCategory = async (id: number) => {
     if (confirm('آیا از حذف این دسته‌بندی اطمینان دارید؟')) {
@@ -221,6 +259,48 @@ const Settings = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle editing a unit
+  const handleEditUnit = async (id) => {
+    if (!unitToEdit.name.trim() || !unitToEdit.abbreviation.trim()) {
+      setError('لطفاً نام و اختصار واحد را وارد کنید');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await unitService.updateUnit(id, {
+        name: unitToEdit.name,
+        abbreviation: unitToEdit.abbreviation
+      });
+      
+      // Update unit in the list
+      setUnits(units.map(unit => unit.id === id ? {
+        ...unit, 
+        name: unitToEdit.name, 
+        abbreviation: unitToEdit.abbreviation
+      } : unit));
+      
+      // Clear editing state
+      setEditingUnit(null);
+      setUnitToEdit({ name: '', abbreviation: '' });
+      setError(null);
+    } catch (err) {
+      console.error('Error updating unit:', err);
+      setError(err.response?.data?.message || 'خطا در ویرایش واحد');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Set up unit for editing
+  const startEditingUnit = (unit) => {
+    setEditingUnit(unit.id);
+    setUnitToEdit({
+      name: unit.name,
+      abbreviation: unit.abbreviation
+    });
   };
 
   // Handle deleting a unit
@@ -492,13 +572,48 @@ const Settings = () => {
                       ) : (
                         categories.map(category => (
                           <div key={category.id} className="flex items-center justify-between">
-                            <span>{category.name}</span>
-                            <button 
-                              className="text-red-500 hover:text-red-700"
-                              onClick={() => handleDeleteCategory(category.id)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {editingCategory === category.id ? (
+                              <div className="flex flex-1 mr-1">
+                                <input 
+                                  type="text" 
+                                  className="flex-1 p-1 border rounded-r-none rounded-md text-sm"
+                                  value={categoryToEdit}
+                                  onChange={(e) => setCategoryToEdit(e.target.value)}
+                                  onKeyDown={(e) => e.key === 'Enter' && handleEditCategory(category.id)}
+                                />
+                                <button 
+                                  className="bg-green-500 text-white p-1 rounded-l-md text-sm"
+                                  onClick={() => handleEditCategory(category.id)}
+                                >
+                                  ذخیره
+                                </button>
+                              </div>
+                            ) : (
+                              <span>{category.name}</span>
+                            )}
+                            <div className="flex space-x-1 space-x-reverse">
+                              {editingCategory === category.id ? (
+                                <button 
+                                  className="text-gray-500 hover:text-gray-700"
+                                  onClick={() => setEditingCategory(null)}
+                                >
+                                  <X size={16} />
+                                </button>
+                              ) : (
+                                <button 
+                                  className="text-blue-500 hover:text-blue-700 ml-2"
+                                  onClick={() => startEditingCategory(category)}
+                                >
+                                  <Edit size={16} />
+                                </button>
+                              )}
+                              <button 
+                                className="text-red-500 hover:text-red-700"
+                                onClick={() => handleDeleteCategory(category.id)}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}
@@ -534,13 +649,58 @@ const Settings = () => {
                       ) : (
                         units.map(unit => (
                           <div key={unit.id} className="flex items-center justify-between">
-                            <span>{unit.name} ({unit.abbreviation})</span>
-                            <button 
-                              className="text-red-500 hover:text-red-700"
-                              onClick={() => handleDeleteUnit(unit.id)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {editingUnit === unit.id ? (
+                              <div className="flex flex-1 mr-1">
+                                <div className="flex-1 flex">
+                                  <input
+                                    type="text"
+                                    className="flex-1 p-1 border rounded-r-none rounded-md text-sm"
+                                    placeholder="نام واحد"
+                                    value={unitToEdit.name}
+                                    onChange={(e) => setUnitToEdit({...unitToEdit, name: e.target.value})}
+                                  />
+                                  <input
+                                    type="text"
+                                    className="w-16 p-1 border-y border-r rounded-r-md text-sm"
+                                    placeholder="اختصار"
+                                    value={unitToEdit.abbreviation}
+                                    onChange={(e) => setUnitToEdit({...unitToEdit, abbreviation: e.target.value})}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleEditUnit(unit.id)}
+                                  />
+                                </div>
+                                <button 
+                                  className="bg-green-500 text-white p-1 rounded-md text-sm mr-1"
+                                  onClick={() => handleEditUnit(unit.id)}
+                                >
+                                  ذخیره
+                                </button>
+                              </div>
+                            ) : (
+                              <span>{unit.name} ({unit.abbreviation})</span>
+                            )}
+                            <div className="flex space-x-1 space-x-reverse">
+                              {editingUnit === unit.id ? (
+                                <button 
+                                  className="text-gray-500 hover:text-gray-700"
+                                  onClick={() => setEditingUnit(null)}
+                                >
+                                  <X size={16} />
+                                </button>
+                              ) : (
+                                <button 
+                                  className="text-blue-500 hover:text-blue-700 ml-2"
+                                  onClick={() => startEditingUnit(unit)}
+                                >
+                                  <Edit size={16} />
+                                </button>
+                              )}
+                              <button 
+                                className="text-red-500 hover:text-red-700"
+                                onClick={() => handleDeleteUnit(unit.id)}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}

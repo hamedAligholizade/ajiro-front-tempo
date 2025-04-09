@@ -109,7 +109,7 @@ const InventoryManagement = () => {
         let reorderPoint = 0;
         
         if (product.inventory) {
-          stockLevel = product.inventory.stock_quantity;
+          stockLevel = product.inventory.available_quantity;
           reorderPoint = product.inventory.reorder_level || 0;
         }
         
