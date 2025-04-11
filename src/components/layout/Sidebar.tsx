@@ -14,6 +14,8 @@ import {
   Package,
   ClipboardList,
   Store,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hooks";
 import ShopSelector from "../shop/ShopSelector";
@@ -83,7 +85,8 @@ const Sidebar = () => {
     return location.pathname === path;
   };
 
-  const navItems = [
+  // Separate navigation items into primary (shown in bottom nav on mobile) and secondary
+  const primaryNavItems = [
     {
       name: t("common.dashboard"),
       icon: <Home className="h-5 w-5" />,
@@ -95,15 +98,24 @@ const Sidebar = () => {
       path: "/sales-counter",
     },
     {
-      name: t("common.reports"),
-      icon: <BarChart2 className="h-5 w-5" />,
-      path: "/reports",
+      name: t("common.inventory"),
+      icon: <Package className="h-5 w-5" />,
+      path: "/inventory-management",
     },
     {
       name: t("common.customers"),
       icon: <Users className="h-5 w-5" />,
       path: "/customers",
     },
+    {
+      name: t("common.reports"),
+      icon: <BarChart2 className="h-5 w-5" />,
+      path: "/reports",
+    },
+  ];
+
+  // Secondary navigation items (those not in the bottom nav)
+  const secondaryNavItems = [
     {
       name: t("common.campaigns"),
       icon: <Send className="h-5 w-5" />,
@@ -120,16 +132,10 @@ const Sidebar = () => {
       path: "/loyalty-program",
     },
     {
-      name: t("common.inventory"),
-      icon: <Package className="h-5 w-5" />,
-      path: "/inventory-management",
-    },
-    {
       name: t("common.orders"),
       icon: <ClipboardList className="h-5 w-5" />,
       path: "/order-management",
     },
-
     {
       name: t("common.settings"),
       icon: <Settings className="h-5 w-5" />,
@@ -141,40 +147,80 @@ const Sidebar = () => {
     <>
       {isMobileMenuOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
       <div
-        className={`sidebar-container h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-30 transform transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`sidebar-container h-screen w-64 bg-background border-l border-border flex flex-col fixed right-0 top-0 z-50 transform transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        {/* Overlay for mobile */}
         <div className="p-6">
-          <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
+            <button 
+              className="p-1 rounded-full hover:bg-muted md:hidden" 
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
           <div className="mt-2">
             <ShopSelector />
           </div>
         </div>
-        <nav className="flex-1 overflow-y-auto p-4">
-          <ul className="space-y-2">
-            {navItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                    isActive(item.path)
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted",
-                  )}
-                >
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+        
+        <nav className="flex-1 overflow-y-auto px-4 pb-4">
+          {/* Primary Navigation - show on desktop only, handled by bottom tab on mobile */}
+          <div className="pb-4 md:block hidden">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2 px-3">
+              {t("common.mainMenu")}
+            </div>
+            <ul className="space-y-1">
+              {primaryNavItems.map((item) => (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                      isActive(item.path)
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted",
+                    )}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          {/* Secondary Navigation - shown on both mobile and desktop */}
+          <div>
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider py-2 px-3">
+              {t("common.additionalFeatures")}
+            </div>
+            <ul className="space-y-1">
+              {secondaryNavItems.map((item) => (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                      isActive(item.path)
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted",
+                    )}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </nav>
+        
         <div className="p-4 border-t border-border">
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-primary/10 p-1 w-10 h-10 flex items-center justify-center">

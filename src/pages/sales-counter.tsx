@@ -49,6 +49,7 @@ import customerService, { Customer as ApiCustomer } from "@/api/services/custome
 import { toast } from "@/components/ui/use-toast";
 import shopService from "@/api/services/shopService";
 import { getShopIdWithDefault } from "@/utils/shopContext";
+import { cn } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -101,6 +102,7 @@ const SalesCounter = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [recentlyAddedProduct, setRecentlyAddedProduct] = useState<string | null>(null);
 
   // Fetch products and categories from the API
   useEffect(() => {
@@ -203,6 +205,28 @@ const SalesCounter = () => {
     : products;
 
   const addToCart = (product: Product) => {
+    // Check if we have enough stock
+    const currentCartItem = cart.find(item => item.id === product.id);
+    const currentQuantity = currentCartItem ? currentCartItem.quantity : 0;
+    
+    // If stock is not available or adding one more would exceed stock
+    if (typeof product.stock === 'number' && currentQuantity >= product.stock) {
+      toast({
+        title: t("insufficient_stock") || "Insufficient Stock",
+        description: t("stock_limit_reached") || `Cannot add more ${product.name} to cart. Available: ${product.stock}`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Set the recently added product id for animation
+    setRecentlyAddedProduct(product.id);
+    
+    // Clear the animation after a short delay
+    setTimeout(() => {
+      setRecentlyAddedProduct(null);
+    }, 500);
+    
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
       if (existingItem) {
@@ -224,6 +248,24 @@ const SalesCounter = () => {
   const updateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(productId);
+      return;
+    }
+
+    // Find the product in the cart
+    const cartItem = cart.find(item => item.id === productId);
+    if (!cartItem) return;
+    
+    // Find the product in the products list to get current stock
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    // Check if the requested quantity exceeds available stock
+    if (typeof product.stock === 'number' && quantity > product.stock) {
+      toast({
+        title: t("insufficient_stock") || "Insufficient Stock",
+        description: t("stock_limit_reached") || `Cannot add more ${product.name} to cart. Available: ${product.stock}`,
+        variant: "destructive"
+      });
       return;
     }
 
@@ -813,36 +855,67 @@ const SalesCounter = () => {
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {filteredProducts
                           .filter((product) => product.category === category)
-                          .map((product) => (
-                            <Card
-                              key={product.id}
-                              className="cursor-pointer hover:bg-gray-50 transition-colors"
-                              onClick={() => addToCart(product)}
-                            >
-                              <CardContent className="p-4 text-center">
-                                <div className="w-16 h-16 mx-auto mb-2 overflow-hidden rounded-md">
-                                  {product.imageUrl ? (
-                                    <img
-                                      src={product.imageUrl}
-                                      alt={product.name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="rounded-full bg-primary/10 p-2 w-full h-full flex items-center justify-center">
-                                      <Tag className="h-6 w-6 text-primary" />
+                          .map((product) => {
+                            // Check if product is in cart
+                            const cartItem = cart.find(item => item.id === product.id);
+                            const isInCart = Boolean(cartItem);
+                            const quantity = cartItem?.quantity || 0;
+                            const isRecentlyAdded = product.id === recentlyAddedProduct;
+                            
+                            return (
+                              <Card
+                                key={product.id}
+                                className={cn(
+                                  "cursor-pointer transition-all duration-200",
+                                  isInCart 
+                                    ? "border-primary border-2 shadow-sm" 
+                                    : "hover:bg-gray-50 hover:shadow-sm",
+                                  isRecentlyAdded && "scale-105"
+                                )}
+                                onClick={() => addToCart(product)}
+                              >
+                                <CardContent className="p-4 text-center relative">
+                                  {/* Quantity Badge */}
+                                  {isInCart && (
+                                    <div className={cn(
+                                      "absolute top-2 left-2 bg-primary text-primary-foreground w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold transition-opacity duration-200",
+                                      isRecentlyAdded && "animate-pulse"
+                                    )}>
+                                      {quantity}
                                     </div>
                                   )}
-                                </div>
-                                <h3 className="font-medium">{product.name}</h3>
-                                <p className="text-primary font-bold">
-                                  {typeof product.price === 'number' ? `تومان ${product.price.toFixed(0)} ` : '۰ تومان'}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {t("stock")}: {product.stock}
-                                </p>
-                              </CardContent>
-                            </Card>
-                          ))}
+                                  
+                                  <div className="w-16 h-16 mx-auto mb-2 overflow-hidden rounded-md">
+                                    {product.imageUrl ? (
+                                      <img
+                                        src={product.imageUrl}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="rounded-full bg-primary/10 p-2 w-full h-full flex items-center justify-center">
+                                        <Tag className="h-6 w-6 text-primary" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <h3 className="font-medium">{product.name}</h3>
+                                  <p className="text-primary font-bold">
+                                    {typeof product.price === 'number' ? `تومان ${product.price.toFixed(0)} ` : '۰ تومان'}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {t("stock")}: {product.stock}
+                                  </p>
+                                  
+                                  {/* Add to cart indicator */}
+                                  {isInCart && (
+                                    <div className="mt-2 text-xs text-primary font-medium">
+                                      {quantity > 1 ? `${quantity} × در سبد خرید` : 'در سبد خرید'}
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
                       </div>
                     </TabsContent>
                   ))}
