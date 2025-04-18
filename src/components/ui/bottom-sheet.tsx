@@ -11,14 +11,14 @@ interface BottomSheetProps {
   showHandle?: boolean;
 }
 
-const BottomSheet = ({
+function BottomSheet({
   isOpen,
   onClose,
   title,
   children,
   height = "auto",
   showHandle = true,
-}: BottomSheetProps) => {
+}: BottomSheetProps) {
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Handle escape key press to close sheet
@@ -115,6 +115,6 @@ const BottomSheet = ({
       </div>
     </div>
   );
-};
+}
 
-export {BottomSheet}; 
+export { BottomSheet }; 

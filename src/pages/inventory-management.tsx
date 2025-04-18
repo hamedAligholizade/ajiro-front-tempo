@@ -32,6 +32,8 @@ import {
   ChevronDown,
   BarChart2,
   Minus,
+  Grid,
+  List,
 } from "lucide-react";
 import { t } from "@/lib/i18n";
 import AddProductModal from "@/components/inventory/AddProductModal";
@@ -40,6 +42,9 @@ import productService from "@/api/services/productService";
 import categoryService from "@/api/services/categoryService";
 import { useToast } from "@/components/ui/use-toast";
 import { formatImageUrl } from '../utils/imageUtils';
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import ResponsiveGrid from "@/components/layout/ResponsiveGrid";
+import PageHeader from "@/components/layout/PageHeader";
 
 // Local UI Product interface
 interface UIProduct {
@@ -73,6 +78,8 @@ const InventoryManagement = () => {
   const [apiProducts, setApiProducts] = useState<UIProduct[]>([]);
   const [apiCategories, setApiCategories] = useState<{id: string, name: string}[]>([]);
   const { toast } = useToast();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
 
   // Initialize with empty array instead of sample data
   const [products, setProducts] = useState<UIProduct[]>([]);
@@ -391,13 +398,152 @@ const InventoryManagement = () => {
       .replace("IRR", "تومان");
   };
 
+  const handleProductClick = (product: UIProduct) => {
+    setSelectedProduct(product);
+    setIsProductSheetOpen(true);
+  };
+
+  const renderProductCard = (product: UIProduct) => (
+    <Card 
+      className="cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => handleProductClick(product)}
+    >
+      <CardContent className="p-4">
+        <div className="flex flex-col gap-3">
+          <div className="w-full h-40 rounded-md overflow-hidden">
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <h3 className="font-medium">{product.name}</h3>
+            <p className="text-sm text-muted-foreground">{product.sku}</p>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">{formatCurrency(product.price)}</span>
+            {getStatusBadge(product.status)}
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">موجودی: {product.stockLevel}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuickStockAdjust(product.id, true);
+                }}
+                title={t("inventory.increaseStock")}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuickStockAdjust(product.id, false);
+                }}
+                title={t("inventory.decreaseStock")}
+                disabled={product.stockLevel <= 0}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderProductRow = (product: UIProduct) => (
+    <tr 
+      key={product.id} 
+      className="border-b hover:bg-gray-50 cursor-pointer"
+      onClick={() => handleProductClick(product)}
+    >
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <div className="font-medium">{product.name}</div>
+            <div className="text-xs text-muted-foreground">{product.sku}</div>
+          </div>
+        </div>
+      </td>
+      <td className="px-4 py-3">{product.category}</td>
+      <td className="px-4 py-3">{formatCurrency(product.price)}</td>
+      <td className="px-4 py-3">{product.stockLevel}</td>
+      <td className="px-4 py-3">{getStatusBadge(product.status)}</td>
+      <td className="px-4 py-3">
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleQuickStockAdjust(product.id, true);
+            }}
+            title={t("inventory.increaseStock")}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleQuickStockAdjust(product.id, false);
+            }}
+            title={t("inventory.decreaseStock")}
+            disabled={product.stockLevel <= 0}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedProduct(product);
+              setIsAdjustStockModalOpen(true);
+            }}
+            title={t("inventory.adjustStock")}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteProduct(product.id);
+            }}
+            className="text-red-500 hover:text-red-700"
+            title="حذف محصول"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </td>
+    </tr>
+  );
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-[1200px] mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold">{t("inventory.title")}</h1>
-          <p className="text-muted-foreground">{t("inventory.subtitle")}</p>
-        </header>
+        <PageHeader
+          title={t("inventory.title")}
+          subtitle={t("inventory.subtitle")}
+        />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start mb-6 overflow-x-auto">
@@ -431,21 +577,11 @@ const InventoryManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("inventory.allCategories")}</SelectItem>
-                    {apiCategories.length > 0 ? (
-                      apiCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      uniqueProductCategories
-                        .filter(cat => cat !== "all")
-                        .map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))
-                    )}
+                    {apiCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.name}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <div className="flex items-center gap-1">
@@ -471,124 +607,53 @@ const InventoryManagement = () => {
                   </Button>
                 </div>
               </div>
-              <Button onClick={() => setIsAddProductModalOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> {t("inventory.addProduct")}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                >
+                  {viewMode === 'grid' ? (
+                    <List className="h-4 w-4" />
+                  ) : (
+                    <Grid className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button onClick={() => setIsAddProductModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" /> {t("inventory.addProduct")}
+                </Button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between">
-                    <CardTitle>{t("inventory.allProducts")}</CardTitle>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">
-                        {filteredProducts.length}{" "}
-                        {filteredProducts.length === 1 ? "محصول" : "محصول"}
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="relative overflow-x-auto">
-                    <table className="w-full text-sm text-right">
-                      <thead className="text-xs uppercase bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3">محصول</th>
-                          <th className="px-4 py-3">دسته‌بندی</th>
-                          <th className="px-4 py-3">قیمت</th>
-                          <th className="px-4 py-3">موجودی</th>
-                          <th className="px-4 py-3">وضعیت</th>
-                          <th className="px-4 py-3">عملیات</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredProducts.map((product) => (
-                          <tr key={product.id} className="border-b">
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
-                                  <img
-                                    src={
-                                      product.imageUrl
-                                    }
-                                    alt={product.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div>
-                                  <div className="font-medium">
-                                    {product.name}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {product.sku}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">{product.category}</td>
-                            <td className="px-4 py-3">
-                              {formatCurrency(product.price)}
-                            </td>
-                            <td className="px-4 py-3">{product.stockLevel}</td>
-                            <td className="px-4 py-3">
-                              {getStatusBadge(product.status)}
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex items-center space-x-2 space-x-reverse">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleQuickStockAdjust(product.id, true)
-                                  }
-                                  title={t("inventory.increaseStock")}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleQuickStockAdjust(product.id, false)
-                                  }
-                                  title={t("inventory.decreaseStock")}
-                                  disabled={product.stockLevel <= 0}
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    setSelectedProduct(product);
-                                    setIsAdjustStockModalOpen(true);
-                                  }}
-                                  title={t("inventory.adjustStock")}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleDeleteProduct(product.id)
-                                  }
-                                  className="text-red-500 hover:text-red-700"
-                                  title="حذف محصول"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {viewMode === 'list' ? (
+              <div className="w-full">
+                <div className="relative overflow-x-auto">
+                  <table className="w-full text-sm text-right">
+                    <thead className="text-xs uppercase bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3">محصول</th>
+                        <th className="px-4 py-3">دسته‌بندی</th>
+                        <th className="px-4 py-3">قیمت</th>
+                        <th className="px-4 py-3">موجودی</th>
+                        <th className="px-4 py-3">وضعیت</th>
+                        <th className="px-4 py-3">عملیات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map((product) => renderProductRow(product))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveGrid
+                columns={{ sm: 2, md: 3, lg: 4 }}
+                gap="4"
+                className="w-full"
+              >
+                {filteredProducts.map((product) => renderProductCard(product))}
+              </ResponsiveGrid>
+            )}
           </TabsContent>
 
           {/* Analytics Tab */}
@@ -829,6 +894,75 @@ const InventoryManagement = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Product Detail Bottom Sheet */}
+      <BottomSheet
+        isOpen={isProductSheetOpen}
+        onClose={() => setIsProductSheetOpen(false)}
+        title={selectedProduct?.name || ''}
+      >
+        {selectedProduct && (
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">{selectedProduct.name}</h3>
+                <p className="text-sm text-muted-foreground">{selectedProduct.sku}</p>
+              </div>
+              {getStatusBadge(selectedProduct.status)}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">قیمت</p>
+                <p className="font-medium">{formatCurrency(selectedProduct.price)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">موجودی</p>
+                <p className="font-medium">{selectedProduct.stockLevel}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">دسته‌بندی</p>
+                <p className="font-medium">{selectedProduct.category}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">آخرین به‌روزرسانی</p>
+                <p className="font-medium">{selectedProduct.lastRestocked}</p>
+              </div>
+            </div>
+
+            {selectedProduct.description && (
+              <div>
+                <p className="text-sm text-muted-foreground">توضیحات</p>
+                <p className="text-sm">{selectedProduct.description}</p>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setIsProductSheetOpen(false);
+                  setSelectedProduct(selectedProduct);
+                  setIsAdjustStockModalOpen(true);
+                }}
+              >
+                تنظیم موجودی
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => {
+                  setIsProductSheetOpen(false);
+                  handleDeleteProduct(selectedProduct.id);
+                }}
+              >
+                حذف محصول
+              </Button>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
 
       {/* Add Product Modal */}
       <AddProductModal
