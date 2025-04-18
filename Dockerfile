@@ -1,5 +1,37 @@
-# Build stage
-FROM node:20-alpine AS build
+# # Build stage
+# FROM node:20-alpine AS build
+
+# # Set working directory
+# WORKDIR /app
+
+# # Copy package.json and package-lock.json
+# COPY package*.json ./
+
+# # Install dependencies
+# RUN npm i
+
+# # Copy the rest of the application code
+# COPY . .
+
+# # Build the application
+# RUN npm run build
+
+# # Production stage
+# FROM nginx:alpine AS production
+
+# # Copy built assets from the build stage
+# COPY --from=build /app/dist /usr/share/nginx/html
+
+# # Copy custom nginx config if needed
+# # COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# # Expose port 80
+# EXPOSE 80
+
+# # Start nginx
+# CMD ["nginx", "-g", "daemon off;"] 
+
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -13,20 +45,8 @@ RUN npm i
 # Copy the rest of the application code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Expose port for Vite dev server
+EXPOSE 5173
 
-# Production stage
-FROM nginx:alpine AS production
-
-# Copy built assets from the build stage
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copy custom nginx config if needed
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port 80
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+# Start development server with hot reloading
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"] 
