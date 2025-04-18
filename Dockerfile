@@ -31,7 +31,7 @@
 # # Start nginx
 # CMD ["nginx", "-g", "daemon off;"] 
 
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
 # Set working directory
 WORKDIR /app
