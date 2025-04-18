@@ -3,7 +3,7 @@
  */
 
 // Get the API base URL without the /api suffix
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://ajiro.ir/api';
 const BASE_URL = API_URL.endsWith('/api') ? API_URL.slice(0, -4) : API_URL;
 
 /**

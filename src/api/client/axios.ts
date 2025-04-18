@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getStoredAccessToken, clearTokens } from '../utils/tokenStorage';
 import { getCurrentShopId } from '../../utils/shopContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://ajiro.ir/api';
 
 // Create an axios instance
 const apiClient = axios.create({
