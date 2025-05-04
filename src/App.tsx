@@ -25,6 +25,7 @@ import Register from "./pages/auth/register";
 import TestAuth from "./pages/auth/test-auth";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ShopSelector from "./pages/shop/selector";
+import PreSale from "./pages/pre";
 
 function App() {
   useEffect(() => {
@@ -81,6 +82,9 @@ function App() {
             </Route>
           </Route>
         </Route>
+        
+        {/* Pre-sale Route */}
+        <Route path="/pre" element={<PreSale />} />
         
         {/* Catch-all Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
