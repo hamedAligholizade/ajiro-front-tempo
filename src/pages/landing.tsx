@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import LandingHeader from "@/components/layout/LandingHeader";
 import LandingFooter from "@/components/layout/LandingFooter";
+import { Card } from "@/components/ui/card";
 
 const Landing = () => {
   return (
@@ -25,20 +26,19 @@ const Landing = () => {
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-10 md:mb-0">
               <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                مدیریت هوشمند کسب و کار کوچک با آجیرو
+                مدیریت هوشمند کسب و کار با آجیرو
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                راهکار جامع مدیریت فروشگاه، مشتریان و موجودی برای کسب و کارهای
-                کوچک
+                راهکار جامع مدیریت فروشگاه، مشتریان و موجودی برای کسب و کارها
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="px-8">
+                <Button size="lg" className="px-8" onClick={() => window.location.href = "https://ajiro.ir/pre"}>
                   شروع رایگان
                   <ArrowRight className="mr-2 h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="lg">
+                {/* <Button variant="outline" size="lg">
                   نمایش دمو
-                </Button>
+                </Button> */}
               </div>
             </div>
             <div className="md:w-1/2">
@@ -211,106 +211,98 @@ const Landing = () => {
       <section className="py-20 bg-white" id="pricing">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">قیمت‌گذاری ساده و شفاف</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              بدون هزینه‌های پنهان، انتخاب طرح مناسب کسب و کار شما
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">اشتراک‌ها</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 hover:border-primary hover:shadow-lg transition-all">
-              <h3 className="text-xl font-bold mb-2">پایه</h3>
-              <div className="text-4xl font-bold mb-6">رایگان</div>
-              <p className="text-gray-600 mb-6">
-                برای کسب و کارهای تازه شروع شده
+          <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            <Card className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">اشتراک رایگان</h3>
+              <p className="text-gray-600 mb-4">
+                دسترسی به تمام امکانات اصلی با محدودیت‌های مشخص شده
               </p>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-2 mb-6">
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>صندوق فروش پایه</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  مدیریت موجودی 
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>مدیریت تا ۱۰۰ محصول</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                   سفارشات (حداکثر ۱۰۰ سفارش در ماه)
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>گزارش‌های پایه</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  صندوق فروش (حداکثر ۲ کاربر)
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>پشتیبانی ایمیلی</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  مدیریت مشتریان (حداکثر ۱۰۰ مشتری)
+                </li>
+                <li className="flex items-center">
+                  <span className="text-green-500 mr-2">✓</span>
+                  گزارش‌های پایه فروش
+                </li>
+                <li className="flex items-center">
+                  <span className="text-green-500 mr-2">✓</span>
+                  اتصال به اینستاگرام(آزمایشی) و تلگرام
                 </li>
               </ul>
-              <Button variant="outline" className="w-full">
-                شروع رایگان
-              </Button>
-            </div>
-
-            <div className="bg-primary/5 p-8 rounded-lg shadow-md border border-primary relative transform scale-105">
-              <div className="absolute top-0 right-0 bg-primary text-white text-sm py-1 px-3 rounded-bl-lg rounded-tr-lg">
-                محبوب‌ترین
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">توجه:</span> در صورت نیاز به افزایش محدودیت‌ها، می‌توانید به اشتراک حرفه‌ای ارتقا دهید.
+                </p>
               </div>
-              <h3 className="text-xl font-bold mb-2">استاندارد</h3>
-              <div className="text-4xl font-bold mb-1">۱۹۹,۰۰۰</div>
-              <p className="text-sm text-gray-600 mb-6">تومان / ماهانه</p>
-              <p className="text-gray-600 mb-6">برای کسب و کارهای در حال رشد</p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>تمام امکانات پایه</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>مدیریت نامحدود محصول</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>برنامه وفاداری مشتریان</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>گزارش‌های پیشرفته</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>پشتیبانی تلفنی</span>
-                </li>
-              </ul>
-              <Button className="w-full">انتخاب طرح</Button>
-            </div>
+            </Card>
 
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 hover:border-primary hover:shadow-lg transition-all">
-              <h3 className="text-xl font-bold mb-2">حرفه‌ای</h3>
-              <div className="text-4xl font-bold mb-1">۳۴۹,۰۰۰</div>
-              <p className="text-sm text-gray-600 mb-6">تومان / ماهانه</p>
-              <p className="text-gray-600 mb-6">برای کسب و کارهای بزرگ</p>
-              <ul className="space-y-3 mb-8">
+            <Card className="p-6 bg-primary/5 relative overflow-hidden">
+              <div className="absolute top-5 right-0 bg-red-500 text-white px-4 py-1 text-sm font-bold transform rotate-45 translate-x-8 -translate-y-2 w-32">
+                پیش‌فروش
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">اشتراک حرفه‌ای</h3>
+              <p className="text-gray-600 mb-4">
+                دسترسی نامحدود به تمام امکانات با پشتیبانی اختصاصی
+              </p>
+              <ul className="space-y-2 mb-6">
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>تمام امکانات استاندارد</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  مدیریت موجودی 
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>چند شعبه‌ای</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  سفارشات نامحدود
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>API اختصاصی</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  کاربران نامحدود
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>مدیریت کارکنان پیشرفته</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  مشتریان نامحدود
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                  <span>پشتیبانی ۲۴/۷</span>
+                  <span className="text-green-500 mr-2">✓</span>
+                  گزارش‌های پیشرفته
+                </li>
+                <li className="flex items-center">
+                  <span className="text-green-500 mr-2">✓</span>
+                  اتصال به اینستاگرام(آزمایشی) و تلگرام
                 </li>
               </ul>
-              <Button variant="outline" className="w-full">
-                انتخاب طرح
-              </Button>
-            </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <p className="text-2xl font-bold text-primary">۹۹۸ هزار تومان</p>
+                  <span className="text-sm text-gray-500 line-through">۲۳ میلیون تومان</span>
+                </div>
+                <p className="text-sm text-green-600 font-semibold mb-2">۹۵٪ تخفیف پیش‌فروش</p>
+                <p className="text-sm text-gray-500 mb-4">برای دو سال</p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    <span className="font-semibold">فقط ۵۰ نفر اول:</span> قیمت پیش‌فروش + ۳ ماه رایگان
+                  </p>
+                </div>
+                <Button className="w-full" onClick={() => window.location.href = "https://zarinp.al/705541"}>ثبت نام و خرید</Button>
+                <p className="text-xs text-gray-500 mt-2">پیش‌فروش تا ۱۵ خرداد ۱۴۰۴</p>
+              </div>
+            </Card>
           </div>
         </div>
       </section>
