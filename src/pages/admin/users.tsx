@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { login, logout, clearError } from "@/redux/slices/authSlice";
 
 interface User {
   id: string;
@@ -16,7 +17,8 @@ interface User {
 }
 
 const AdminUsers = () => {
-  const { user, login, logout } = useAuth();
+  const dispatch = useAppDispatch();
+  const { user, isLoading, error: authError } = useAppSelector(state => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [users, setUsers] = useState<User[]>([]);
@@ -32,10 +34,10 @@ const AdminUsers = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      if (user?.role !== "admin") {
+      const result = await dispatch(login({ email, password })).unwrap();
+      if (result.user.role !== "admin") {
         setError("شما دسترسی به این بخش را ندارید");
-        await logout();
+        dispatch(logout());
       }
     } catch (error) {
       setError("نام کاربری یا رمز عبور اشتباه است");
@@ -58,7 +60,7 @@ const AdminUsers = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
+    dispatch(logout());
     navigate("/");
   };
 
@@ -99,6 +101,7 @@ const AdminUsers = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -108,10 +111,19 @@ const AdminUsers = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full"
+                disabled={isLoading}
               />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <Button type="submit" className="w-full">ورود</Button>
+            {(error || authError) && (
+              <p className="text-red-500 text-sm">{error || authError}</p>
+            )}
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "در حال ورود..." : "ورود"}
+            </Button>
           </form>
         </Card>
       </div>
