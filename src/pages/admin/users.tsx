@@ -3,48 +3,53 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface User {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
-  createdAt: string;
+  created_at: string;
   plan: string;
 }
 
 const AdminUsers = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState("");
+  const { user, login, logout } = useAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if already authenticated
-    const auth = localStorage.getItem("admin_auth");
-    if (auth === "true") {
-      setIsAuthenticated(true);
+    if (user?.role === "admin") {
       fetchUsers();
     }
-  }, []);
+  }, [user]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Hardcoded credentials
-    if (username === "admin" && password === "ajiro2024") {
-      setIsAuthenticated(true);
-      localStorage.setItem("admin_auth", "true");
-      fetchUsers();
-    } else {
+    try {
+      await login(email, password);
+      if (user?.role !== "admin") {
+        setError("شما دسترسی به این بخش را ندارید");
+        await logout();
+      }
+    } catch (error) {
       setError("نام کاربری یا رمز عبور اشتباه است");
     }
   };
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/users");
+      const response = await fetch("/api/users", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data);
     } catch (error) {
@@ -52,21 +57,21 @@ const AdminUsers = () => {
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("admin_auth");
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 
   const downloadCSV = () => {
-    const headers = ["نام", "ایمیل", "تلفن", "تاریخ ثبت نام", "طرح"];
+    const headers = ["نام", "نام خانوادگی", "ایمیل", "تلفن", "تاریخ ثبت نام", "طرح"];
     const csvContent = [
       headers.join(","),
       ...users.map(user => [
-        user.name,
+        user.first_name,
+        user.last_name,
         user.email,
         user.phone,
-        user.createdAt,
+        user.created_at,
         user.plan
       ].join(","))
     ].join("\n");
@@ -81,18 +86,18 @@ const AdminUsers = () => {
     document.body.removeChild(link);
   };
 
-  if (!isAuthenticated) {
+  if (!user || user.role !== "admin") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md p-8">
           <h2 className="text-2xl font-bold text-center mb-6">ورود به پنل مدیریت</h2>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">نام کاربری</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ایمیل</label>
               <Input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full"
               />
             </div>
@@ -130,6 +135,7 @@ const AdminUsers = () => {
               <thead>
                 <tr className="border-b">
                   <th className="text-right py-3 px-4">نام</th>
+                  <th className="text-right py-3 px-4">نام خانوادگی</th>
                   <th className="text-right py-3 px-4">ایمیل</th>
                   <th className="text-right py-3 px-4">تلفن</th>
                   <th className="text-right py-3 px-4">تاریخ ثبت نام</th>
@@ -139,10 +145,11 @@ const AdminUsers = () => {
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{user.name}</td>
+                    <td className="py-3 px-4">{user.first_name}</td>
+                    <td className="py-3 px-4">{user.last_name}</td>
                     <td className="py-3 px-4">{user.email}</td>
                     <td className="py-3 px-4">{user.phone}</td>
-                    <td className="py-3 px-4">{user.createdAt}</td>
+                    <td className="py-3 px-4">{user.created_at}</td>
                     <td className="py-3 px-4">{user.plan}</td>
                   </tr>
                 ))}
