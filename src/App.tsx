@@ -26,6 +26,7 @@ import TestAuth from "./pages/auth/test-auth";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ShopSelector from "./pages/shop/selector";
 import PreSale from "./pages/pre";
+import AdminUsers from "@/pages/admin/users";
 
 function App() {
   useEffect(() => {
@@ -85,6 +86,9 @@ function App() {
         
         {/* Pre-sale Route */}
         <Route path="/pre" element={<PreSale />} />
+        
+        {/* Admin Users Route */}
+        <Route path="/admin/users" element={<AdminUsers />} />
         
         {/* Catch-all Route */}
         <Route path="*" element={<Navigate to="/" replace />} />

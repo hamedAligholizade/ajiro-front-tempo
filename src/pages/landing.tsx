@@ -227,7 +227,7 @@ const Landing = () => {
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
-                   سفارشات (حداکثر ۱۰۰ سفارش در ماه)
+                  سفارشات (حداکثر ۱۰۰ سفارش در ماه)
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
@@ -268,7 +268,13 @@ const Landing = () => {
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
-                  سفارشات نامحدود
+                  سفارشات (حداکثر ۳۰۰ سفارش در ماه)
+                  <div className="relative group mr-2">
+                    <span className="text-gray-400 cursor-help">ⓘ</span>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                      پس از ۳۰۰ سفارش در ماه، برای هر سفارش اضافی مبلغ ۵۰۰ تومان محاسبه می‌شود. این هزینه به صورت خودکار از اعتبار حساب شما کسر می‌شود.
+                    </div>
+                  </div>
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
