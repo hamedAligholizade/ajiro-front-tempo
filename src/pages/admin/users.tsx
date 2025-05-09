@@ -48,7 +48,7 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await apiClient.get("/api/users");
+      const response = await apiClient.get("/users");
       const data = response.data;
       setUsers(data.users);
     } catch (error) {
