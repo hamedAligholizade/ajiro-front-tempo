@@ -8,14 +8,14 @@ import { login, logout, clearError } from "@/redux/slices/authSlice";
 import apiClient from "@/api/client/axios";
 import { toast } from "@/components/ui/use-toast";
 
-interface User {
+interface PreRegisteredUser {
   id: string;
-  first_name: string;
-  last_name: string;
+  full_name: string;
   email: string;
   phone: string;
+  instagram_id: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
-  plan: string;
 }
 
 const AdminUsers = () => {
@@ -23,7 +23,7 @@ const AdminUsers = () => {
   const { user, isLoading, error: authError } = useAppSelector(state => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<PreRegisteredUser[]>([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -48,14 +48,14 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await apiClient.get("/users");
-      const data = response.data;
-      setUsers(data.users);
+      const response = await apiClient.get("/pre-register");
+      const data = response.data.data;
+      setUsers(data);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching pre-registered users:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch users",
+        description: "Failed to fetch pre-registered users",
         variant: "destructive",
       });
     }
@@ -67,16 +67,16 @@ const AdminUsers = () => {
   };
 
   const downloadCSV = () => {
-    const headers = ["نام", "نام خانوادگی", "ایمیل", "تلفن", "تاریخ ثبت نام", "طرح"];
+    const headers = ["نام", "ایمیل", "تلفن", "آیدی اینستاگرام", "وضعیت", "تاریخ ثبت نام"];
     const csvContent = [
       headers.join(","),
       ...users.map(user => [
-        user.first_name,
-        user.last_name,
+        user.full_name,
         user.email,
         user.phone,
-        user.created_at,
-        user.plan
+        user.instagram_id,
+        user.status,
+        user.created_at
       ].join(","))
     ].join("\n");
 
@@ -84,7 +84,7 @@ const AdminUsers = () => {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `users_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `pre_registered_users_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -136,7 +136,7 @@ const AdminUsers = () => {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">مدیریت کاربران</h1>
+          <h1 className="text-2xl font-bold">مدیریت پیش ثبت نام‌ها</h1>
           <div className="space-x-4">
             <Button onClick={downloadCSV}>دانلود CSV</Button>
             <Button variant="outline" onClick={handleLogout}>خروج</Button>
@@ -149,22 +149,22 @@ const AdminUsers = () => {
               <thead>
                 <tr className="border-b">
                   <th className="text-right py-3 px-4">نام</th>
-                  <th className="text-right py-3 px-4">نام خانوادگی</th>
                   <th className="text-right py-3 px-4">ایمیل</th>
                   <th className="text-right py-3 px-4">تلفن</th>
+                  <th className="text-right py-3 px-4">آیدی اینستاگرام</th>
+                  <th className="text-right py-3 px-4">وضعیت</th>
                   <th className="text-right py-3 px-4">تاریخ ثبت نام</th>
-                  <th className="text-right py-3 px-4">طرح</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{user.first_name}</td>
-                    <td className="py-3 px-4">{user.last_name}</td>
+                    <td className="py-3 px-4">{user.full_name}</td>
                     <td className="py-3 px-4">{user.email}</td>
                     <td className="py-3 px-4">{user.phone}</td>
+                    <td className="py-3 px-4">{user.instagram_id}</td>
+                    <td className="py-3 px-4">{user.status}</td>
                     <td className="py-3 px-4">{user.created_at}</td>
-                    <td className="py-3 px-4">{user.plan}</td>
                   </tr>
                 ))}
               </tbody>
