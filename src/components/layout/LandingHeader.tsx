@@ -64,7 +64,7 @@ const LandingHeader = () => {
             >
               قیمت‌گذاری
             </Link>
-            <Link
+            {/* <Link
               to="/blog"
               className={`${isActive("/blog") ? "text-primary font-medium" : "text-gray-600 hover:text-primary"}`}
             >
@@ -75,7 +75,7 @@ const LandingHeader = () => {
               className={`${isActive("/faq") ? "text-primary font-medium" : "text-gray-600 hover:text-primary"}`}
             >
               سوالات متداول
-            </Link>
+            </Link> */}
             <Link
               to="/about"
               className={`${isActive("/about") ? "text-primary font-medium" : "text-gray-600 hover:text-primary"}`}
@@ -90,8 +90,8 @@ const LandingHeader = () => {
             </Link>
           </nav>
 
-          {/* <div className="flex items-center space-x-4 space-x-reverse">
-            <Link to="/auth/login" className="hidden md:block">
+          <div className="flex items-center space-x-4 space-x-reverse">
+            {/* <Link to="/auth/login" className="hidden md:block">
               <Button variant="outline" size="sm">
                 ورود
               </Button>
@@ -110,8 +110,8 @@ const LandingHeader = () => {
               ) : (
                 <Menu className="h-6 w-6" />
               )}
-            </button>
-          </div> */}
+            </button> */}
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -136,7 +136,7 @@ const LandingHeader = () => {
               >
                 قیمت‌گذاری
               </Link>
-              <Link
+              {/* <Link
                 to="/blog"
                 className={`${isActive("/blog") ? "text-primary font-medium" : "text-gray-600"}`}
               >
@@ -147,7 +147,7 @@ const LandingHeader = () => {
                 className={`${isActive("/faq") ? "text-primary font-medium" : "text-gray-600"}`}
               >
                 سوالات متداول
-              </Link>
+              </Link> */}
               <Link
                 to="/about"
                 className={`${isActive("/about") ? "text-primary font-medium" : "text-gray-600"}`}
@@ -160,8 +160,8 @@ const LandingHeader = () => {
               >
                 تماس با ما
               </Link>
-              {/* <div className="flex space-x-4 space-x-reverse pt-2">
-                <Link to="/auth/login" className="flex-1">
+              <div className="flex space-x-4 space-x-reverse pt-2">
+                {/* <Link to="/auth/login" className="flex-1">
                   <Button variant="outline" size="sm" className="w-full">
                     ورود
                   </Button>
@@ -170,8 +170,8 @@ const LandingHeader = () => {
                   <Button size="sm" className="w-full">
                     ثبت نام
                   </Button>
-                </Link>
-              </div> */}
+                </Link> */}
+              </div>
             </nav>
           </div>
         )}
