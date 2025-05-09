@@ -90,7 +90,7 @@ const LandingHeader = () => {
             </Link>
           </nav>
 
-          <div className="flex items-center space-x-4 space-x-reverse">
+          {/* <div className="flex items-center space-x-4 space-x-reverse">
             <Link to="/auth/login" className="hidden md:block">
               <Button variant="outline" size="sm">
                 ورود
@@ -100,7 +100,6 @@ const LandingHeader = () => {
               <Button size="sm">ثبت نام</Button>
             </Link>
 
-            {/* Mobile Menu Button */}
             <button
               className="md:hidden p-2"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -112,7 +111,7 @@ const LandingHeader = () => {
                 <Menu className="h-6 w-6" />
               )}
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Mobile Navigation */}
@@ -161,7 +160,7 @@ const LandingHeader = () => {
               >
                 تماس با ما
               </Link>
-              <div className="flex space-x-4 space-x-reverse pt-2">
+              {/* <div className="flex space-x-4 space-x-reverse pt-2">
                 <Link to="/auth/login" className="flex-1">
                   <Button variant="outline" size="sm" className="w-full">
                     ورود
@@ -172,7 +171,7 @@ const LandingHeader = () => {
                     ثبت نام
                   </Button>
                 </Link>
-              </div>
+              </div> */}
             </nav>
           </div>
         )}

@@ -51,11 +51,11 @@ function App() {
           <Route path="/faq" element={<FAQ />} />
         
         {/* Auth Routes */}
-        <Route path="/auth">
+        {/* <Route path="/auth">
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="test" element={<TestAuth />} />
-        </Route>
+        </Route> */}
         
         {/* Shop Routes (requires authentication) */}
         <Route element={<ProtectedRoute />}>
