@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { login, logout, clearError } from "@/redux/slices/authSlice";
+import apiClient from "@/api/client/axios";
+import { toast } from "@/components/ui/use-toast";
 
 interface User {
   id: string;
@@ -46,16 +48,16 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/users", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      if (!response.ok) throw new Error("Failed to fetch users");
-      const data = await response.json();
-      setUsers(data);
+      const response = await apiClient.get("/api/users");
+      const data = response.data;
+      setUsers(data.users);
     } catch (error) {
       console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users",
+        variant: "destructive",
+      });
     }
   };
 
